@@ -70,8 +70,8 @@ export default async function Contracts({
           <h1 className="mt-2 text-3xl font-semibold">Contracten</h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
             Een bedrijf kan meerdere contracten hebben. Contractwaarde is de som
-            van vastgelegde regels en amendementen; facturatie en betalingen
-            volgen in fase 6.
+            van vastgelegde regels en amendementen (incl. BTW); facturatie en
+            betalingen staan apart onder Financiën.
           </p>
         </div>
         <Button asChild>

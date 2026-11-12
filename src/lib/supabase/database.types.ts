@@ -34,6 +34,12 @@ export type Database = {
       foreignKeyName: "contract_amendments_contract_id_sponsor_id_fkey"
       columns: ["contract_id","sponsor_id"]
 isOneToOne: false
+      referencedRelation: "contract_invoicing"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "contract_amendments_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
       referencedRelation: "contract_totals"
       referencedColumns: ["contract_id","sponsor_id"]
     },{
@@ -57,6 +63,12 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
+      foreignKeyName: "contract_documents_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_invoicing"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
       foreignKeyName: "contract_documents_contract_id_sponsor_id_fkey"
       columns: ["contract_id","sponsor_id"]
 isOneToOne: false
@@ -94,6 +106,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "contract_amendments"
       referencedColumns: ["id","contract_id"]
+    },{
+      foreignKeyName: "contract_lines_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_invoicing"
+      referencedColumns: ["contract_id","sponsor_id"]
     },{
       foreignKeyName: "contract_lines_contract_id_sponsor_id_fkey"
       columns: ["contract_id","sponsor_id"]
@@ -142,6 +160,12 @@ isOneToOne: false
       foreignKeyName: "contract_rights_contract_id_sponsor_id_fkey"
       columns: ["contract_id","sponsor_id"]
 isOneToOne: false
+      referencedRelation: "contract_invoicing"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "contract_rights_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
       referencedRelation: "contract_totals"
       referencedColumns: ["contract_id","sponsor_id"]
     },{
@@ -180,6 +204,12 @@ isOneToOne: false
       foreignKeyName: "contracts_predecessor_contract_id_sponsor_id_fkey"
       columns: ["predecessor_contract_id","sponsor_id"]
 isOneToOne: false
+      referencedRelation: "contract_invoicing"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "contracts_predecessor_contract_id_sponsor_id_fkey"
+      columns: ["predecessor_contract_id","sponsor_id"]
+isOneToOne: false
       referencedRelation: "contract_totals"
       referencedColumns: ["contract_id","sponsor_id"]
     },{
@@ -194,6 +224,44 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "sponsors"
       referencedColumns: ["id"]
+    }
+                  ]
+                },"credit_allocations": {
+                  Row: {
+                    "amount": number,"created_at": string,"created_by": string | null,"credit_invoice_id": string,"id": string,"reversed_at": string | null,"reversed_by": string | null,"sponsor_id": string,"target_invoice_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"created_at"?: string,"created_by"?: string | null,"credit_invoice_id": string,"id"?: string,"reversed_at"?: string | null,"reversed_by"?: string | null,"sponsor_id": string,"target_invoice_id": string
+                  }
+                  Update: {
+                    "amount"?: number,"created_at"?: string,"created_by"?: string | null,"credit_invoice_id"?: string,"id"?: string,"reversed_at"?: string | null,"reversed_by"?: string | null,"sponsor_id"?: string,"target_invoice_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "credit_allocations_credit_invoice_id_sponsor_id_fkey"
+      columns: ["credit_invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoice_balances"
+      referencedColumns: ["invoice_id","sponsor_id"]
+    },{
+      foreignKeyName: "credit_allocations_credit_invoice_id_sponsor_id_fkey"
+      columns: ["credit_invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "credit_allocations_target_invoice_id_sponsor_id_fkey"
+      columns: ["target_invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoice_balances"
+      referencedColumns: ["invoice_id","sponsor_id"]
+    },{
+      foreignKeyName: "credit_allocations_target_invoice_id_sponsor_id_fkey"
+      columns: ["target_invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["id","sponsor_id"]
     }
                   ]
                 },"documents": {
@@ -242,6 +310,120 @@ isOneToOne: false
       referencedColumns: ["id","sponsor_id"]
     }
                   ]
+                },"invoice_documents": {
+                  Row: {
+                    "created_at": string,"document_id": string,"invoice_id": string,"sponsor_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"document_id": string,"invoice_id": string,"sponsor_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"document_id"?: string,"invoice_id"?: string,"sponsor_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invoice_documents_document_id_sponsor_id_fkey"
+      columns: ["document_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "documents"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "invoice_documents_invoice_id_sponsor_id_fkey"
+      columns: ["invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoice_balances"
+      referencedColumns: ["invoice_id","sponsor_id"]
+    },{
+      foreignKeyName: "invoice_documents_invoice_id_sponsor_id_fkey"
+      columns: ["invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["id","sponsor_id"]
+    }
+                  ]
+                },"invoice_lines": {
+                  Row: {
+                    "contract_line_id": string | null,"created_at": string,"description": string,"id": string,"invoice_id": string,"line_total": number | null,"position": number,"quantity": number,"sponsor_id": string,"unit_price": number,"vat_amount": number | null,"vat_rate": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "contract_line_id"?: string | null,"created_at"?: string,"description": string,"id"?: string,"invoice_id": string,"line_total"?: never,"position"?: number,"quantity": number,"sponsor_id": string,"unit_price": number,"vat_amount"?: never,"vat_rate"?: number
+                  }
+                  Update: {
+                    "contract_line_id"?: string | null,"created_at"?: string,"description"?: string,"id"?: string,"invoice_id"?: string,"line_total"?: never,"position"?: number,"quantity"?: number,"sponsor_id"?: string,"unit_price"?: number,"vat_amount"?: never,"vat_rate"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invoice_lines_contract_line_id_sponsor_id_fkey"
+      columns: ["contract_line_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_lines"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "invoice_lines_invoice_id_sponsor_id_fkey"
+      columns: ["invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoice_balances"
+      referencedColumns: ["invoice_id","sponsor_id"]
+    },{
+      foreignKeyName: "invoice_lines_invoice_id_sponsor_id_fkey"
+      columns: ["invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["id","sponsor_id"]
+    }
+                  ]
+                },"invoices": {
+                  Row: {
+                    "billing_snapshot": Json | null,"contract_id": string | null,"created_at": string,"created_by": string | null,"currency": string,"due_on": string | null,"id": string,"invoice_number": string | null,"issue_date": string | null,"issued_at": string | null,"issued_by": string | null,"kind": string,"original_invoice_id": string | null,"prices_include_vat": boolean,"reference": string | null,"sponsor_id": string,"status": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "billing_snapshot"?: Json | null,"contract_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"due_on"?: string | null,"id"?: string,"invoice_number"?: string | null,"issue_date"?: string | null,"issued_at"?: string | null,"issued_by"?: string | null,"kind"?: string,"original_invoice_id"?: string | null,"prices_include_vat"?: boolean,"reference"?: string | null,"sponsor_id": string,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "billing_snapshot"?: Json | null,"contract_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"due_on"?: string | null,"id"?: string,"invoice_number"?: string | null,"issue_date"?: string | null,"issued_at"?: string | null,"issued_by"?: string | null,"kind"?: string,"original_invoice_id"?: string | null,"prices_include_vat"?: boolean,"reference"?: string | null,"sponsor_id"?: string,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invoices_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_invoicing"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "invoices_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_totals"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "invoices_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contracts"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "invoices_original_invoice_id_sponsor_id_fkey"
+      columns: ["original_invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoice_balances"
+      referencedColumns: ["invoice_id","sponsor_id"]
+    },{
+      foreignKeyName: "invoices_original_invoice_id_sponsor_id_fkey"
+      columns: ["original_invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "invoices_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"package_right_templates": {
                   Row: {
                     "description": string,"id": string,"package_version_id": string,"position": number,"quantity": number,"timing": string | null,"unit": string
@@ -279,6 +461,64 @@ isOneToOne: false
       columns: ["package_id"]
 isOneToOne: false
       referencedRelation: "sponsorship_packages"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"payment_allocations": {
+                  Row: {
+                    "amount": number,"created_at": string,"created_by": string | null,"id": string,"invoice_id": string,"payment_id": string,"reversed_at": string | null,"reversed_by": string | null,"sponsor_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"created_at"?: string,"created_by"?: string | null,"id"?: string,"invoice_id": string,"payment_id": string,"reversed_at"?: string | null,"reversed_by"?: string | null,"sponsor_id": string
+                  }
+                  Update: {
+                    "amount"?: number,"created_at"?: string,"created_by"?: string | null,"id"?: string,"invoice_id"?: string,"payment_id"?: string,"reversed_at"?: string | null,"reversed_by"?: string | null,"sponsor_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payment_allocations_invoice_id_sponsor_id_fkey"
+      columns: ["invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoice_balances"
+      referencedColumns: ["invoice_id","sponsor_id"]
+    },{
+      foreignKeyName: "payment_allocations_invoice_id_sponsor_id_fkey"
+      columns: ["invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "payment_allocations_payment_id_sponsor_id_fkey"
+      columns: ["payment_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "payment_balances"
+      referencedColumns: ["payment_id","sponsor_id"]
+    },{
+      foreignKeyName: "payment_allocations_payment_id_sponsor_id_fkey"
+      columns: ["payment_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "payments"
+      referencedColumns: ["id","sponsor_id"]
+    }
+                  ]
+                },"payments": {
+                  Row: {
+                    "amount": number,"created_at": string,"currency": string,"direction": string,"id": string,"method": string,"received_on": string,"reference": string | null,"registered_by": string | null,"reversal_reason": string | null,"reversed_at": string | null,"reversed_by": string | null,"sponsor_id": string,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"created_at"?: string,"currency"?: string,"direction"?: string,"id"?: string,"method": string,"received_on": string,"reference"?: string | null,"registered_by"?: string | null,"reversal_reason"?: string | null,"reversed_at"?: string | null,"reversed_by"?: string | null,"sponsor_id": string,"status"?: string
+                  }
+                  Update: {
+                    "amount"?: number,"created_at"?: string,"currency"?: string,"direction"?: string,"id"?: string,"method"?: string,"received_on"?: string,"reference"?: string | null,"registered_by"?: string | null,"reversal_reason"?: string | null,"reversed_at"?: string | null,"reversed_by"?: string | null,"sponsor_id"?: string,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payments_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
       referencedColumns: ["id"]
     }
                   ]
@@ -387,7 +627,21 @@ isOneToOne: true
                 }
           }
           Views: {
-            "contract_totals": {
+            "contract_invoicing": {
+                  Row: {
+                    "contract_id": string,"contract_value": number | null,"invoiced_net": number | null,"sponsor_id": string,"to_invoice": number | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "contracts_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"contract_totals": {
                   Row: {
                     "baseline_total": number | null,"contract_id": string,"current_total": number | null,"line_count": number | null,"sponsor_id": string
                   }
@@ -395,6 +649,34 @@ isOneToOne: true
                   Relationships: [
                     {
       foreignKeyName: "contracts_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"invoice_balances": {
+                  Row: {
+                    "credit_applied": number | null,"credited": number | null,"due_on": string | null,"invoice_id": string,"invoice_number": string | null,"issue_date": string | null,"kind": string,"open_amount": number | null,"paid": number | null,"sponsor_id": string,"status": string,"total": number | null,"total_excl_vat": number | null,"vat_total": number | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "invoices_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"payment_balances": {
+                  Row: {
+                    "allocated": number | null,"amount": number,"direction": string,"payment_id": string,"received_on": string,"sponsor_id": string,"status": string,"unallocated": number | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "payments_sponsor_id_fkey"
       columns: ["sponsor_id"]
 isOneToOne: false
       referencedRelation: "sponsors"
@@ -413,10 +695,25 @@ isOneToOne: false
 "add_contract_right":
 { Args: { "contract": string,"details": Json }; Returns: string
                            },
+"add_invoice_line":
+{ Args: { "details": Json,"invoice": string }; Returns: string
+                           },
+"allocate_credit":
+{ Args: { "amount": number,"credit": string,"target": string }; Returns: string
+                           },
+"allocate_payment":
+{ Args: { "amount": number,"invoice": string,"payment": string }; Returns: string
+                           },
 "confirm_contract":
 { Args: { "target": string }; Returns: undefined
                            },
 "create_contract":
+{ Args: { "company": string,"details": Json }; Returns: string
+                           },
+"create_credit_note":
+{ Args: { "details": Json,"original": string }; Returns: string
+                           },
+"create_invoice":
 { Args: { "company": string,"details": Json }; Returns: string
                            },
 "crm_owners":
@@ -424,11 +721,17 @@ isOneToOne: false
               "label": string,"user_id": string
             }[]
                            },
+"delete_invoice_draft":
+{ Args: { "target": string }; Returns: undefined
+                           },
 "finalize_document":
 { Args: { "target": string }; Returns: undefined
                            },
 "get_access_context":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"issue_invoice":
+{ Args: { "details": Json,"target": string }; Returns: string
                            },
 "manage_sponsor_member":
 { Args: { "active": boolean,"company": string,"contact": string,"target": string }; Returns: undefined
@@ -442,10 +745,16 @@ isOneToOne: false
 "register_fulfillment":
 { Args: { "details": Json,"target": string }; Returns: string
                            },
+"register_payment":
+{ Args: { "company": string,"details": Json }; Returns: string
+                           },
 "remove_contract_line":
 { Args: { "target": string }; Returns: undefined
                            },
 "remove_contract_right":
+{ Args: { "target": string }; Returns: undefined
+                           },
+"remove_invoice_line":
 { Args: { "target": string }; Returns: undefined
                            },
 "renew_contract":
@@ -453,6 +762,12 @@ isOneToOne: false
                            },
 "retire_package_version":
 { Args: { "target": string }; Returns: undefined
+                           },
+"reverse_allocation":
+{ Args: { "kind": string,"target": string }; Returns: undefined
+                           },
+"reverse_payment":
+{ Args: { "reason": string,"target": string }; Returns: undefined
                            },
 "review_fulfillment":
 { Args: { "action": string,"reason"?: string,"target": string }; Returns: undefined
@@ -487,6 +802,9 @@ isOneToOne: false
 { Args: { "details": Json,"target": string }; Returns: undefined
                            },
 "update_contract_right":
+{ Args: { "details": Json,"target": string }; Returns: undefined
+                           },
+"update_invoice_draft":
 { Args: { "details": Json,"target": string }; Returns: undefined
                            }
           }

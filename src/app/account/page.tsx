@@ -44,11 +44,13 @@ export default async function Account() {
             <Link href="/account/pakketten" className="my-6 block underline">
               Sponsorpakketten
             </Link>
+            <Link href="/account/financien" className="my-6 block underline">
+              Financiën
+            </Link>
           </>
         )}
         <p className="my-6">
-          Financiën, rapportages en het persoonlijke sponsorportaal volgen in
-          latere fases.
+          Rapportages en het persoonlijke sponsorportaal volgen in latere fases.
         </p>
         {access.role === "super_admin" && (
           <Link href="/account/gebruikers" className="my-6 block underline">

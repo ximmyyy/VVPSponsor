@@ -5,8 +5,8 @@
 Dit is de functionele en technische projectbasis voor het nieuwe sponsorportaal van VV Pernis, een Nederlandse amateurvoetbalvereniging uit Rotterdam. Opdrachtgever is lid van de sponsorcommissie.
 
 - Laatst bijgewerkt: 2026-11-12.
-- Huidige fase: **5 — Sponsorpakketten en contracten**, lokaal geïmplementeerd en geverifieerd. Pakketversies, contracten met regels/rechten, atomair bevestigen, amendementen, verlenging, beëindiging, uitvoering met bewijs en private contractdocumenten werken.
-- Volgende fase: **6 — Financieel beheer**, uitsluitend na een nieuwe opdracht van de gebruiker. Vooraf nodig: BTW-regels en facturatiedefinities (zie §10).
+- Huidige fase: **6 — Financieel beheer**, lokaal geïmplementeerd en geverifieerd. Facturen (incl. BTW), gatenvrije nummering, termijnfacturatie uit contracten, creditnota's, handmatige betalingen met toewijzing, verrekening en restitutie werken.
+- Volgende fase: **7 — Intern dashboard en rapportages**, uitsluitend na een nieuwe opdracht. Vooraf nodig: gewenste KPI's, definitie actieve sponsor, periode/seizoen en exportformaten (zie §10).
 - Alle onderstaande tabellen, routes, policies en processen zijn **ontwerp**, tenzij in `PROGRESS.md` expliciet als geïmplementeerd en geverifieerd vermeld.
 - `PROJECT.md` beschrijft scope, architectuur, bedrijfsregels, ontwerpkeuzes en acceptatiecriteria. `PROGRESS.md` bevat de gedetailleerde voortgang, controles, open taken en bekende problemen. `AGENTS.md` bevat blijvende werkinstructies.
 - Werk na iedere fase de faseaanduiding en belangrijke ontwerpbeslissingen hier bij; leg uitvoeringsdetails in `PROGRESS.md` vast. Ontwerp is geen bewijs van werkende functionaliteit.
@@ -198,6 +198,54 @@ pakketten, prijzen of contracten** ingevoerd; de opdrachtgever voert die zelf in
 - **Bedragen:** exacte `numeric` (eenheidsprijs 4, totalen 2 decimalen), Zod valideert
   als decimale tekst; de app rekent niet zelf. Het BTW-tarief op regels is optioneel
   vastgelegd; of prijzen incl./excl. BTW zijn wordt in fase 6 vastgesteld.
+
+### Fase 6: financieel beheer
+
+Interne routes (Super Admin/commissie): `/account/financien` (facturen/betalingen),
+`/account/financien/facturen/nieuw`, `/facturen/[id]`, `/account/financien/betalingen/nieuw`
+en `/betalingen/[id]`. De contractpagina toont contractwaarde, gefactureerd (na credits)
+en nog te factureren. Vastgestelde opdrachtgeverkeuzes: **prijzen incl. BTW, standaard
+21%**, nummering **F-JJJJ-NNNN / C-JJJJ-NNNN**, **geen standaardbetaaltermijn**
+(vervaldatum altijd handmatig), **commissie en Super Admin** beheren financiën.
+
+- **Facturen** (`invoices`, soort factuur/credit, status concept/uitgereikt). Een concept
+  heeft geen nummer en is onzichtbaar voor de sponsor. Uitreiken (één transactie onder
+  rijlock) controleert: minimaal één regel en positief totaal, factuurdatum niet in de
+  toekomst, vervaldatum ≥ factuurdatum, per contractregel niet meer factureren dan
+  afgesproken (credits tellen terug), en legt het factuuradres als momentopname vast.
+  Het nummer komt uit een rij-vergrendelde teller per soort en kalenderjaar van de
+  factuurdatum: gatenvrij, want een mislukte uitreiking rolt ook de teller terug.
+  Daarna zijn factuur en regels onveranderlijk (triggers); correctie via creditnota.
+- **Regels** (`invoice_lines`): bedrag incl. BTW; `line_total = round(aantal × prijs, 2)`
+  en `vat_amount = round(line_total × tarief / (100 + tarief), 2)` per regel als
+  gegenereerde kolommen. Excl. = incl. − BTW. Een regel kan naar een contractregel van
+  hetzelfde bedrijf verwijzen (termijnen: meerdere facturen per contractregel).
+- **Creditnota's** verwijzen naar de oorspronkelijke uitgereikte factuur (zelfde
+  bedrijf), kopiëren desgewenst alle regels, krijgen een eigen C-reeks en mogen samen
+  niet meer crediteren dan gefactureerd. Bij uitreiken wordt het credit automatisch
+  verrekend met het openstaande deel van de oorspronkelijke factuur; een rest blijft
+  zichtbaar als tegoed, te verrekenen met een andere factuur (`credit_allocations`) of
+  terug te betalen.
+- **Betalingen** (`payments`) staan los van facturen: ontvangst (`in`) of terugbetaling
+  (`out`), handmatig, datum niet in de toekomst, geen bank-/boekhoudkoppeling. Een
+  gelijke registratie (bedrijf, richting, bedrag, datum, kenmerk) wordt geweigerd tenzij
+  expliciet bevestigd. `payment_allocations` koppelt N:M; ontvangsten alleen aan
+  facturen, terugbetalingen alleen aan creditnota's. Niet-toegewezen bedragen blijven
+  zichtbaar. Toewijzen vergrendelt eerst de betaling en dan de factuur, zodat
+  gelijktijdige toewijzingen nooit meer dan het beschikbare/openstaande bedrag boeken
+  (getest met echte parallelle verzoeken). Terugdraaien (toewijzing of hele betaling,
+  met reden) is append-only: de historie blijft zichtbaar.
+- **Afgeleide bedragen** centraal in views met `security_invoker`: `invoice_balances`
+  (totaal, BTW, excl., betaald, gecrediteerd/verrekend, open), `payment_balances`
+  (toegewezen/onverdeeld) en `contract_invoicing` (contractwaarde, gefactureerd netto,
+  nog te factureren). Fase 7/8 rekenen niet zelf.
+- **Factuur-PDF**: het portaal genereert geen PDF; de commissie uploadt de verzonden PDF
+  (`invoice_documents`, alleen PDF, zelfde uploadcontrole als fase 5) en deelt die
+  expliciet met de sponsor.
+- **Toegang**: sponsor leest alleen eigen uitgereikte facturen/credits, regels, eigen
+  geregistreerde (niet-teruggedraaide) betalingen en actieve toewijzingen; nooit
+  concepten. Bestuur krijgt financiële inzage pas via rapportages (fase 7). Mutaties
+  in `private.finance_audit`.
 
 ## 2. Doel en productgrenzen
 
@@ -602,7 +650,7 @@ Deze punten blokkeren de initialisatie niet. Vraag ze op bij de relevante fase; 
 | Fase 3 | Wie wordt eerste Super Admin, interne gebruikers/rollen, authenticatievoorkeur, MFA-/uitnodigingsbeleid, definitieve bestuurstoegang; mag één persoon meerdere sponsorbedrijven vertegenwoordigen? |
 | Fase 4 | Voorlopige velden/statussen en duplicaatbeleid geïmplementeerd; echte bronadministratie/import niet aangeleverd of uitgevoerd. Wijzigingen in velden/duplicaatbeleid eerst beoordelen; import alleen na aparte opdracht en proefvalidatie. |
 | Fase 5 | Module gebouwd; nog aan te leveren: echte pakketten, prijzen, rechten, looptijden, voorwaarden en contracttemplates (invoer door de commissie zelf), wie uitvoering formeel goedkeurt (vier-ogen gewenst?), welk bewijs sponsoren mogen zien, en of contractnummering een bestaand formaat moet volgen. |
-| Fase 6 | BTW-regels, prijzen inclusief/exclusief BTW, factuur-/creditnummering, betalingstermijnen, termijnen, seizoen/boekjaar, bestaande facturatiesoftware, correcties/restituties, wie betalingen vastlegt en welke bestuursoverzichten nodig zijn. |
+| Fase 6 | Vastgesteld: incl. 21% BTW, F/C-nummering, handmatige vervaldatum, commissie + Super Admin. Nog open: seizoen/boekjaar voor rapportage, bestaande facturatiesoftware/export, of de vereniging voor alle sponsoring BTW-plichtig is (fiscaal advies), en welke bestuursoverzichten nodig zijn. |
 | Fase 7 | Gewenste KPI's, definitie actieve sponsor, periode-/seizoenfilters, rapportages en exportformaten. |
 | Fase 8 | Gewenste sponsorcontactroute, toegestane wijzigingsverzoeken, zichtbare contract-/bewijsvelden en beheer van gemachtigden. |
 | Fase 9 | Pipelinefasen, taken-/herinneringsregels, evenementdoelgroepen, capaciteit, bedrijfs- of persoonsaanmelding, introducés, notificatiekanalen en afzender. |
@@ -621,7 +669,7 @@ Accounts en secrets via veilige provider-/omgevingsinstellingen aanleveren, niet
 | D005 | 2026-11-12 | Vastgelegd | Contractwaarde, facturatie, credits en ontvangsten zijn gescheiden; betalingen worden expliciet toegewezen. |
 | D006 | 2026-11-12 | Vastgelegd | Autorisatie server-side én in database/Storage; accountstatus en actieve bedrijfsmachtigingen uit de database zijn leidend. |
 | D007 | 2026-11-12 | Vastgelegd | Publicatie via afzonderlijke goedgekeurde projecties en toestemming; contracten/facturen blijven privé. |
-| D008 | 2026-11-12 | Voorlopig | Nederlands, EUR en `Europe/Amsterdam`; exacte fiscale en rapportagedefinities volgen vóór financiële implementatie. |
+| D008 | 2026-11-12 | Voorlopig | Nederlands, EUR en `Europe/Amsterdam`; BTW-definitie vastgelegd in D033, rapportagedefinities volgen vóór fase 7. |
 | D009 | 2026-11-12 | Vastgelegd | De tien modules worden stapsgewijs gebouwd; fase 1 maakt alleen de benodigde fundering, niet het hele datamodel. |
 | D010 | 2026-11-12 | Voorlopig | Eerst sponsoradministratie zonder bank-/boekhoudkoppeling of digitale ondertekening. Uitbreiding alleen na een aparte scopebeslissing. |
 | D011 | 2026-11-12 | Vastgelegd | Fase 1 gebruikt de bestaande checkout, Node 24/npm 11 met exacte dependencyversies en lockfile, Next.js App Router/strict TypeScript. Alleen lokale Supabase CLI 3.1.0-doelen; geen remote koppeling. |
@@ -650,6 +698,12 @@ Accounts en secrets via veilige provider-/omgevingsinstellingen aanleveren, niet
 | D030 | 2026-11-12 | Voorlopig | Uitvoering per recht, controle-markering zonder vier-ogenprincipe (wie goedkeurt is nog open), correctie via ongedaan maken met reden. Delen met sponsor expliciet per registratie/document. |
 | D031 | 2026-11-12 | Vastgelegd | Nieuwe documenten starten `pending`; serverinhoudscontrole (PDF/PNG/JPEG, 8 MB) en objectcontrole vóór `available`. Downloadroute weigert `pending`; documentmetadata alleen titel/delen wijzigbaar. Bestaande fase-3-documenten bleven `available`. |
 | D032 | 2026-11-12 | Voorlopig | Bestuur in fase 5 geen directe contracttoegang; sponsor alleen eigen vastgelegde afspraken via RLS (portaalschermen in fase 8). BTW-tarief optioneel op regels; incl./excl.-definitie in fase 6. |
+| D033 | 2026-11-12 | Vastgelegd door opdrachtgever | Prijzen in contracten en facturen zijn inclusief BTW; standaardtarief 21%, per regel aanpasbaar. BTW per regel uit het afgeronde regelbedrag; excl. = incl. − BTW. Vervangt het voorlopige deel van D008 en D032 over BTW. |
+| D034 | 2026-11-12 | Vastgelegd door opdrachtgever | Nummering F-JJJJ-NNNN (facturen) en C-JJJJ-NNNN (creditnota's), per kalenderjaar van de factuurdatum, gatenvrij via rij-vergrendelde teller, pas bij uitreiken. Concepten hebben geen nummer en zijn verwijderbaar. |
+| D035 | 2026-11-12 | Vastgelegd door opdrachtgever | Geen standaardbetaaltermijn: vervaldatum verplicht en handmatig bij uitreiken (creditnota: standaard factuurdatum). Commissie en Super Admin beheren facturen en betalingen. |
+| D036 | 2026-11-12 | Vastgelegd | Uitgereikte facturen onveranderlijk; correctie via creditnota (max. gefactureerd bedrag), automatische verrekening met de oorspronkelijke factuur, rest als tegoed voor verrekening of restitutie. Per contractregel niet meer factureren dan afgesproken. |
+| D037 | 2026-11-12 | Vastgelegd | Betalingen handmatig en los van facturen; N:M-toewijzing onder vergrendeling (betaling → factuur), onverdeeld bedrag zichtbaar, dubbele registratie alleen na expliciete bevestiging, terugdraaien append-only met reden. Geen bank-/boekhoudkoppeling (D010). |
+| D038 | 2026-11-12 | Voorlopig | Factuur-PDF wordt geüpload, niet gegenereerd. Bestuur krijgt financiële inzage pas via goedgekeurde rapportages (fase 7). |
 
 ### Bronnen voor latere technische verificatie
 
@@ -686,4 +740,10 @@ Fase 5 is lokaal geverifieerd met 16 Node-tests, 380 databasecontroles (waarvan 
 nieuw), 41 browserregressies, SQL-lint zonder bevindingen en de echte
 contractintegratieflow (`npm run test:contracts`) plus geslaagde auth-/CRM-regressies.
 Alle migraties en controles werken ook op een nieuwe lege lokale stack. Geen
-productie-inrichting, echte pakketten/contracten of deployment. Fase 6 is niet gestart.
+productie-inrichting, echte pakketten/contracten of deployment.
+
+Fase 6 is lokaal geverifieerd met 21 Node-tests, 470 databasecontroles (90 nieuw), 46
+browserregressies, SQL-lint zonder bevindingen, de echte financiële integratieflow
+(`npm run test:finance`, inclusief parallelle toewijzingen) en geslaagde contract-,
+CRM- en authregressies. Alle 15 migraties en 470 controles werken op een nieuwe lege
+stack. Geen echte facturen/betalingen, boekhoudkoppeling of deployment. Fase 7 is niet gestart.

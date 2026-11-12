@@ -144,6 +144,13 @@ export default async function ContractDetail({
           .maybeSingle()
       ).data
     : null;
+  const invoicing = await client
+    .from("contract_invoicing")
+    .select("contract_value,invoiced_net,to_invoice")
+    .eq("contract_id", id)
+    .maybeSingle();
+  if (invoicing.error)
+    throw new Error("Facturatiestand kon niet geladen worden.");
   const draft = c.status === "draft";
   const confirmed = c.status === "confirmed";
   const ownerLabel = (uid: string | null) =>
@@ -203,7 +210,7 @@ export default async function ContractDetail({
               </p>
             )}
           <p className="mt-1 text-xs text-muted-foreground">
-            Som van regels; facturatie volgt in fase 6.
+            Som van regels incl. BTW; los van facturatie.
           </p>
         </Card>
       </div>
@@ -298,6 +305,37 @@ export default async function ContractDetail({
           )}
         </Card>
       </div>
+
+      {!draft && (
+        <Card className="mt-6 flex flex-wrap items-center justify-between gap-4 p-6">
+          <div>
+            <h2 className="mb-2 text-lg font-semibold">Facturatie</h2>
+            <p className="text-sm">
+              Contractwaarde {formatEuro(invoicing.data?.contract_value)} ·
+              gefactureerd (na credits){" "}
+              {formatEuro(invoicing.data?.invoiced_net)} · nog te factureren{" "}
+              <strong>{formatEuro(invoicing.data?.to_invoice)}</strong>
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Ontvangen betalingen staan per factuur onder Financiën.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              className="inline-flex min-h-11 items-center underline"
+              href={`/account/financien/facturen/nieuw?sponsor=${c.sponsor_id}&contract=${id}`}
+            >
+              Factuur opstellen
+            </Link>
+            <Link
+              className="inline-flex min-h-11 items-center underline"
+              href={`/account/financien?sponsor=${c.sponsor_id}`}
+            >
+              Facturen van dit bedrijf
+            </Link>
+          </div>
+        </Card>
+      )}
 
       {draft && (
         <Card className="mt-6 p-6">
@@ -481,7 +519,7 @@ export default async function ContractDetail({
                     label="BTW-tarief (%)"
                     name="vat_rate"
                     inputMode="decimal"
-                    hint="Optioneel; BTW-behandeling volgt in fase 6."
+                    hint="Prijzen zijn incl. BTW; leeg = 21% bij facturatie."
                   />
                 </div>
               </StateForm>

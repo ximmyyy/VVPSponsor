@@ -1,8 +1,8 @@
 # VV Pernis Sponsorportaal
 
-Technische basis voor één modulaire Next.js-app met Supabase. Fases 1–5 zijn lokaal geïmplementeerd: technische basis, layouts, authenticatie,
-sponsor-CRM en pakketten/contracten/sponsorrechten. Financiën, rapportages, het
-sponsorportaal en publieke sponsorinhoud volgen later.
+Technische basis voor één modulaire Next.js-app met Supabase. Fases 1–6 zijn lokaal geïmplementeerd: technische basis, layouts, authenticatie,
+sponsor-CRM, pakketten/contracten/sponsorrechten en financieel beheer. Rapportages,
+het sponsorportaal en publieke sponsorinhoud volgen later.
 Lees bij ontwikkeling eerst [PROJECT.md](PROJECT.md), [PROGRESS.md](PROGRESS.md)
 en [AGENTS.md](AGENTS.md). Gebruik de bestaande checkout; een cloudtaak is al geïsoleerd.
 
@@ -252,8 +252,8 @@ prijzen ingevuld: de commissie voert die zelf in.
 ```sh
 npm run db:migrate
 npm run db:types
-npm run db:test          # 380 controles
-npm test                 # 16 tests
+npm run db:test          # 380 controles (fase 5)
+npm test                 # 16 tests (fase 5)
 npm run dev
 # Tweede terminal; niet parallel met test:auth/test:crm of dienstherstarts:
 npm run test:contracts
@@ -264,3 +264,31 @@ uitsluitend eigen `.example`/TEST-fixtures op. Elders dan deze cloudmachine kan
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` naar een eigen Chromium wijzen. Stop daarna de eigen
 devserver voor `npm run test:e2e` (41 tests). Gebruik bij scripting
 `supabase migration new <naam> </dev/null`, anders wacht de CLI op stdin.
+
+## Fase 6: financieel beheer
+
+Onder **Financiën** beheren commissie en Super Admin facturen, creditnota's en
+betalingen. Prijzen zijn **inclusief BTW** (standaard 21%, per regel aanpasbaar);
+nummers **F-JJJJ-NNNN** en **C-JJJJ-NNNN** worden pas bij uitreiken gatenvrij
+toegekend; de vervaldatum vul je altijd zelf in.
+
+1. Stel een factuur op (vanuit een bedrijf of contract), voeg contract- of losse regels
+   toe en reik uit. Daarna is de factuur vergrendeld; corrigeer met een creditnota.
+2. Registreer ontvangen geld handmatig en wijs het toe aan één of meer facturen.
+   Niet-toegewezen bedragen blijven zichtbaar. Restituties registreer je als
+   terugbetaling op een creditnota.
+3. Upload de verzonden factuur-PDF en deel die expliciet met de sponsor.
+
+```sh
+npm run db:migrate && npm run db:types
+npm run db:test          # 470 controles
+npm test                 # 21 tests
+npm run dev
+# Tweede terminal; niet parallel met andere integratiescripts:
+npm run test:finance
+```
+
+`test:finance` toetst ook echte gelijktijdige toewijzingen. Lokaal laten de
+integratietests gaten in de nummertellers achter (fixtures worden opgeruimd,
+tellers niet); dat speelt alleen in de lokale ontwikkeldatabase. Stop de devserver
+voor `npm run test:e2e` (46 tests).

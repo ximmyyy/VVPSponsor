@@ -9,11 +9,12 @@
 - Fase **3 — Authenticatie en toegangsrechten**: lokaal geïmplementeerd en geverifieerd.
 - Fase **4 — Sponsor CRM**: lokaal afgerond en geverifieerd.
 - Fase **5 — Sponsorpakketten en contracten**: lokaal afgerond en geverifieerd.
-- Volgende opdracht kan fase **6 — Financieel beheer** zijn. Die is niet gestart.
+- Fase **6 — Financieel beheer**: lokaal afgerond en geverifieerd.
+- Volgende opdracht kan fase **7 — Intern dashboard en rapportages** zijn. Die is niet gestart.
 - Er werkt een technische Next.js-basis met minimale lokale database. Er werken nu
   login, gecontroleerde uitnodigingen en een private Storage-basis. Er is nog geen
   volledige sponsoradministratie of deployment. De startpagina meldt dit expliciet.
-- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D032. Werkinstructies:
+- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D038. Werkinstructies:
   [AGENTS.md](AGENTS.md). Installatie/start: [README.md](README.md).
 
 ## Fasestatus
@@ -26,11 +27,70 @@
 | 3 | Authenticatie en toegangsrechten | Lokaal afgerond |
 | 4 | Sponsor CRM | Lokaal afgerond |
 | 5 | Sponsorpakketten en contracten | Lokaal afgerond |
-| 6 | Financieel beheer | Niet gestart |
+| 6 | Financieel beheer | Lokaal afgerond |
 | 7 | Intern dashboard en rapportages | Niet gestart |
 | 8 | Persoonlijk sponsorportaal | Niet gestart |
 | 9 | Acquisitie, evenementen en notificaties | Niet gestart |
 | 10 | Publieke sponsorwebsite en productievoorbereiding | Niet gestart |
+
+## Fase 6 — Financieel beheer
+
+Opdrachtgeverkeuzes: prijzen incl. 21% BTW, nummering F-/C-JJJJ-NNNN, vervaldatum altijd
+handmatig, commissie + Super Admin beheren financiën (D033–D035).
+
+- `/account/financien`: facturen/creditnota's (filter status, bedrijf; 25 per pagina) en
+  betalingen met niet-toegewezen bedrag. Links in de interne navigatie en op `/account`.
+- Factuur opstellen per bedrijf, optioneel vanuit een vastgelegd contract; regels uit
+  contractregels (termijnbedrag of volledige prijs) of losse regels met BTW-tarief.
+  Concept bewerken/verwijderen; uitreiken met factuurdatum en verplichte vervaldatum.
+- Factuurdetail: totaal incl./BTW/excl., betaald, gecrediteerd, openstaand, afgeleide
+  status (openstaand/deels betaald/vervallen/voldaan), factuuradresmomentopname,
+  afwikkelingshistorie met terugdraaien, volledige of lege creditnota, verrekenen van
+  tegoed, restitutie-link en factuur-PDF-upload (alleen PDF, delen expliciet).
+- Betaling registreren (ontvangst/terugbetaling, methode, kenmerk, dubbel-waarschuwing),
+  toewijzen aan openstaande facturen of creditnota's, betaling terugdraaien met reden.
+- Contractpagina toont contractwaarde, gefactureerd (na credits) en nog te factureren.
+
+| Controle fase 6 | Resultaat |
+| --- | --- |
+| `npm run lint`, `npm run typecheck` | Geslaagd. |
+| `npm test` | 21 geslaagd (5 nieuw: centen, factuurregel, uitreiken, betaling, afgeleide status), 0 mislukt. |
+| `npm run db:test` | 470 geslaagd in vijf bestanden; `finance.test.sql` 90 nieuwe controles: afronding incl. BTW (21%/9%, regelafronding), termijnen, F/C-nummerformaat en gatenvrij na mislukte uitreiking, over-facturatie per contractregel, vervaldatum/factuurdatum, onveranderlijkheid (ook voor eigenaar), deelbetaling, onverdeeld, overtoewijzing, centen, dubbele registratie, terugdraaien, credit met automatische verrekening, max. crediteren, tegoed verrekenen, restitutie, reconciliatie, bedrijfsgrenzen, sponsor A/B/inactief/bestuur/anon, audit. |
+| Lokale SQL-lint public/private, fail-on warning | Geslaagd, geen bevindingen. |
+| Lege lokale stack (VVPSponsorFinanceReplay) | 15 migraties en 470 controles geslaagd; gestopt zonder volumes te wissen. Eerste poging hergebruikte het bewaarde volume van de fase-5-replay en was dus geen lege stack; daarom een nieuw project-id gebruikt. |
+| `npm run test:finance` | Geslaagd: browserflow factuur → betaling → toewijzing → creditnota → verrekening, plus API-controles: twee parallelle toewijzingen van dezelfde betaling en twee parallelle betalingen op één factuur leveren telkens precies één succes en één 23514. Restitutie, contractwaarde ≠ gefactureerd ≠ ontvangen, factuur-PDF download (A 307, B 404), isolatie, terugdraaien, 360/1440 px en axe. 0 achtergebleven fixtures. |
+| `npm run test:contracts`, `test:crm`, `test:auth` | Alle drie geslaagd na fase 6. |
+| `npm run test:e2e` | Productiebuild geslaagd; 46 browsertests (5 nieuwe sessievereisten) geslaagd. |
+| Visuele controle | Screenshot factuurdetail op 1440 px geïnspecteerd; bedragen consistent. |
+
+### Correcties tijdens fase 6
+
+- `add_invoice_line` las bij losse regels een niet-toegewezen record; vervolgmigratie
+  `finance_line_fix` (toegepaste migratie niet herschreven).
+- Variabele `amount` botste in `register_payment` met de kolomnaam; vóór toepassen hernoemd.
+- `Intl` gebruikt een vaste spatie tussen € en bedrag; testselectors gebruiken `\s`.
+- Na volledige toewijzing/verrekening verdwijnt het formulier; de nieuwe regel in de
+  afwikkelingshistorie is de zichtbare bevestiging.
+
+### Grenzen en open punten
+
+- Geen PDF-generatie, verzending per e-mail, bank-/boekhoudkoppeling of export naar
+  boekhoudsoftware; geen herinneringen voor vervallen facturen (fase 9).
+- BTW-tarief per regel is een administratieve keuze; of alle sponsoring BTW-belast is,
+  is fiscaal advies en niet door de software gecontroleerd.
+- Nummering volgt het kalenderjaar van de factuurdatum; een factuur met een datum in
+  een vorig jaar krijgt een nummer in die reeks. Chronologie binnen een reeks wordt niet
+  afgedwongen.
+- Lokale integratietests verwijderen hun fixtures maar zetten nummertellers niet terug;
+  in de lokale ontwikkeldatabase ontstaan daardoor gaten. Productie verwijdert nooit
+  uitgereikte facturen.
+- Bestuursinzage en financiële rapportages volgen in fase 7; sponsorschermen in fase 8
+  (RLS is al getest).
+
+Bestanden: `supabase/migrations/20261112201017_finance.sql`, `…201355_finance_line_fix.sql`,
+`supabase/tests/finance.test.sql`, `src/modules/finance/*`, routes onder
+`src/app/account/financien`, contractpagina/-lijst, CRM-shell, accountpagina, e2e-routes,
+`scripts/test-finance.mjs`, `tests/finance-schema.test.ts`, databasetypes, documentatie.
 
 ## Fase 5 — Sponsorpakketten en contracten
 
@@ -444,11 +504,11 @@ gepubliceerd of gedeployd; herstel in een nieuwe cloudtaak is niet getest.
 
 ## Open taken en volgende fase
 
-Fase 5 is lokaal geïmplementeerd. Echte pakketten/prijzen/voorwaarden voert de
-commissie zelf in via de module; die gegevens worden niet verzonnen. Fase 6
-(Financieel beheer) vereist een nieuwe opdracht en vooraf: BTW-regels (prijzen incl./
-excl.), factuur-/creditnummering, betalingstermijnen en termijnfacturatie,
-seizoen/boekjaar, correctie-/restitutiebeleid en wie betalingen vastlegt. Echte CRM-import blijft een aparte opdracht met proefvalidatie.
+Fase 6 is lokaal geïmplementeerd. Echte pakketten, contracten, facturen en betalingen
+voert de commissie zelf in; die gegevens worden niet verzonnen. Fase 7 (Intern
+dashboard en rapportages) vereist een nieuwe opdracht en vooraf: gewenste KPI's,
+definitie 'actieve sponsor', seizoen/boekjaar voor periodes, welke cijfers het bestuur
+mag zien en gewenste exportformaten (CSV/Excel). Echte CRM-import blijft een aparte opdracht met proefvalidatie.
 Officieel logo, eerste echte Super Admin en productieconfiguratie blijven open;
 geen waarden of echte persoonsgegevens in Git opgeslagen.
 
@@ -462,3 +522,4 @@ geen waarden of echte persoonsgegevens in Git opgeslagen.
 | 2026-11-12 | 3 | Auth, live autorisatie, bedrijfsmachtigingen, private Storage, uitnodiging, herstel en optionele MFA lokaal geverifieerd. | D017–D021 |
 | 2026-11-12 | 4 | CRM, meerdere contacten, interne privacy, prospectconversie, filters/archief en beperkte commissie-uitnodigingen. | D022–D026 |
 | 2026-11-12 | 5 | Pakketversies, contracten met regels/rechten, atomaire bevestiging, amendementen, verlenging/beëindiging, uitvoering met bewijs en private contractdocumenten; 380 DB-controles, 41 browsertests en echte contractflow. | D027–D032 |
+| 2026-11-12 | 6 | Facturen incl. 21% BTW, gatenvrije F/C-nummering, termijnen uit contracten, creditnota's met verrekening, handmatige betalingen met vergrendelde toewijzing, restitutie en factuur-PDF; 470 DB-controles, 46 browsertests en echte financiële flow. | D033–D038 |

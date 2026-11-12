@@ -25,7 +25,8 @@
     "test:e2e": "npm run build && playwright test",
     "test:auth": "node scripts/test-auth.mjs",
     "test:crm": "node scripts/test-crm.mjs",
-    "test:contracts": "node scripts/test-contracts.mjs"
+    "test:contracts": "node scripts/test-contracts.mjs",
+    "test:finance": "node scripts/test-finance.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "7.0.6",
