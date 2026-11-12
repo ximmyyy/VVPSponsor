@@ -9,6 +9,7 @@ const sections = [
   ["/account/contracten", "Contracten"],
   ["/account/sponsorrechten", "Sponsorrechten"],
   ["/account/financien", "Financiën"],
+  ["/account/verzoeken", "Verzoeken"],
 ] as const;
 export function CrmShell({
   children,

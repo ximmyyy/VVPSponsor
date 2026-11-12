@@ -23,7 +23,7 @@ insert into private.user_access(user_id, role, is_active) values ('00000000-0000
 insert into private.user_access(user_id, role, is_active) values ('00000000-0000-0000-0000-000000000004', 'sponsor', true);
 insert into private.user_access(user_id, role, is_active) values ('00000000-0000-0000-0000-000000000005', 'sponsor', true);
 insert into private.user_access(user_id, role, is_active) values ('00000000-0000-0000-0000-000000000006', 'sponsor', false);
-insert into public.club_settings(club_name) values ('TEST — Club');
+insert into public.club_settings(club_name) values ('TEST — Club') on conflict (id) do update set club_name=excluded.club_name;
 select is((select count(*)::int from pg_class c join pg_namespace n on c.relnamespace=n.oid where n.nspname='public' and c.relkind='r' and not c.relrowsecurity), 0, 'alle blootgestelde tabellen hebben RLS');
 select is((select count(*)::int from pg_enum where enumtypid='private.app_role'::regtype), 4, 'precies vier rollen');
 select is((select proconfig::text from pg_proc where oid='private.current_app_role()'::regprocedure), '{"search_path=\"\""}', 'helper heeft lege search_path');

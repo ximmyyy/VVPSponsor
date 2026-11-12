@@ -1,8 +1,9 @@
 # VV Pernis Sponsorportaal
 
-Technische basis voor één modulaire Next.js-app met Supabase. Fases 1–7 zijn lokaal geïmplementeerd: technische basis, layouts, authenticatie,
-sponsor-CRM, pakketten/contracten/sponsorrechten, financieel beheer en het dashboard
-met rapportages. Het sponsorportaal en publieke sponsorinhoud volgen later.
+Technische basis voor één modulaire Next.js-app met Supabase. Fases 1–8 zijn lokaal geïmplementeerd: technische basis, layouts, authenticatie,
+sponsor-CRM, pakketten/contracten/sponsorrechten, financieel beheer, dashboard met
+rapportages en het persoonlijke sponsorportaal. Acquisitie, evenementen, notificaties
+en de publieke sponsorwebsite volgen later.
 Lees bij ontwikkeling eerst [PROJECT.md](PROJECT.md), [PROGRESS.md](PROGRESS.md)
 en [AGENTS.md](AGENTS.md). Gebruik de bestaande checkout; een cloudtaak is al geïsoleerd.
 
@@ -304,11 +305,35 @@ contracten, facturen en betalingen. Elke export wordt gelogd.
 
 ```sh
 npm run db:migrate && npm run db:types
-npm run db:test          # 513 controles
-npm test                 # 24 tests
+npm run db:test          # 513 controles (fase 7)
+npm test                 # 24 tests (fase 7)
 npm run dev
 # Tweede terminal; niet parallel met andere integratiescripts:
 npm run test:reporting
 ```
 
 Stop daarna de devserver voor `npm run test:e2e` (47 tests).
+
+## Fase 8: persoonlijk sponsorportaal
+
+Sponsors zien na inloggen op `/account` de knop **Naar mijn sponsorportaal**
+(`/account/portaal`): overzicht, samenwerking (lopend en vorige jaren), facturen,
+bedrijfsgegevens met wijzigingsverzoek, collega's en een Contact-knop (e-mail).
+
+- **Super Admin**: stel eenmalig het contactadres van de commissie in via
+  `/account/instellingen`. Zonder adres toont het portaal een melding.
+- **Commissie**: beoordeel wijzigingsverzoeken onder **Verzoeken** (`/account/verzoeken`).
+  Goedkeuren werkt het CRM direct bij; afwijzen vraagt een toelichting.
+- Collega-uitnodigingen gebruiken de bestaande server-only Auth-binding
+  (`scripts/local-admin-env.mjs`, zie fase 3).
+
+```sh
+npm run db:migrate && npm run db:types
+npm run db:test          # 571 controles
+npm test                 # 28 tests
+npm run dev
+# Tweede terminal; niet parallel met andere integratiescripts:
+npm run test:portal      # volledige mobiele sponsorflow
+```
+
+Stop daarna de devserver voor `npm run test:e2e` (55 tests).

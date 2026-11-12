@@ -11,11 +11,12 @@
 - Fase **5 — Sponsorpakketten en contracten**: lokaal afgerond en geverifieerd.
 - Fase **6 — Financieel beheer**: lokaal afgerond en geverifieerd.
 - Fase **7 — Intern dashboard en rapportages**: lokaal afgerond en geverifieerd.
-- Volgende opdracht kan fase **8 — Persoonlijk sponsorportaal** zijn. Die is niet gestart.
+- Fase **8 — Persoonlijk sponsorportaal**: lokaal afgerond en geverifieerd.
+- Volgende opdracht kan fase **9 — Acquisitie, evenementen en notificaties** zijn. Die is niet gestart.
 - Er werkt een technische Next.js-basis met minimale lokale database. Er werken nu
   login, gecontroleerde uitnodigingen en een private Storage-basis. Er is nog geen
   volledige sponsoradministratie of deployment. De startpagina meldt dit expliciet.
-- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D042. Werkinstructies:
+- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D046. Werkinstructies:
   [AGENTS.md](AGENTS.md). Installatie/start: [README.md](README.md).
 
 ## Fasestatus
@@ -30,9 +31,60 @@
 | 5 | Sponsorpakketten en contracten | Lokaal afgerond |
 | 6 | Financieel beheer | Lokaal afgerond |
 | 7 | Intern dashboard en rapportages | Lokaal afgerond |
-| 8 | Persoonlijk sponsorportaal | Niet gestart |
+| 8 | Persoonlijk sponsorportaal | Lokaal afgerond |
 | 9 | Acquisitie, evenementen en notificaties | Niet gestart |
 | 10 | Publieke sponsorwebsite en productievoorbereiding | Niet gestart |
+
+## Fase 8 — Persoonlijk sponsorportaal
+
+Opdrachtgeverkeuzes (D043–D045): contact via e-mail; wijzigingsverzoeken voor logische
+bedrijfsgegevens; eigen contract en contracten van vorige jaren; sponsors mogen collega's
+uitnodigen.
+
+- `/account/portaal`: overzicht met lopende samenwerking en waarde, voortgang sponsorrechten,
+  openstaande facturen (met vervallen-melding), belangrijke datum (opzeg-/einddatum), snelkoppelingen
+  en contactblok met `mailto`. Tabnavigatie met `aria-current`, mobiel horizontaal scrollbaar.
+- `/samenwerking` (lopend/vorige jaren) en contractdetail met regels, rechten, gedeelde uitvoering
+  en bewijs, wijzigingen en documenten; `/facturen` met status, PDF en betalingen; `/bedrijf` met
+  huidige gegevens, aanvraagformulier en eigen verzoeken (intrekken); `/collegas` met gebruikers,
+  uitnodigen en intrekken.
+- Commissie: `/account/verzoeken` (open/afgehandeld, huidig vs. voorgesteld, goedkeuren met bericht,
+  afwijzen met reden); navigatie-item Verzoeken. Super Admin: `/account/instellingen` (clubnaam,
+  contactadres). `/account` toont sponsors een knop naar het portaal.
+
+| Controle fase 8 | Resultaat |
+| --- | --- |
+| `npm run lint`, `npm run typecheck` | Geslaagd (o.a. lintfout 'component in render' opgelost). |
+| `npm test` | 28 geslaagd (4 nieuw: verzoekvalidatie, toegestane velden, mailto, uitnodiging), 0 mislukt. |
+| `npm run db:test` | 571 geslaagd in zeven bestanden; `portal.test.sql` 58 nieuwe controles: eigen bedrijfsprojectie zonder interne velden, rollen, verzoekvalidatie en -whitelist, alleen gewijzigde velden, bedrijf uit machtiging, intrekken door collega, isolatie, beoordeling atomair met vorige waarden, dubbele KvK zonder halve wijziging, onveranderlijk na afhandeling, uitnodigingen (normalisatie, ander bedrijf, ouder account niet kaapbaar, e-mail-mismatch, interne rol, eenmalig), collega-toegang, intrekken (niet zichzelf, niet ander bedrijf, direct effectief), contactadres alleen Super Admin, anon, audit. |
+| SQL-lint fail-on warning | Geslaagd na vervolgmigratie `portal_request_volatility` (IMMUTABLE → STABLE). |
+| Lege lokale stack (VVPSponsorPortalReplay) | 20 migraties en 571 controles geslaagd; gestopt zonder volumes te wissen. |
+| `npm run test:portal` | Geslaagd: Super Admin stelt contactadres in via UI; sponsor op 390 px (mobiel, touch) doorloopt overzicht, samenwerking (lopend + vorig), rechten en bewijsdownload, facturen en PDF, wijzigingsverzoek met validatiefout, collega uitnodigen (echte Auth-invite) en intrekken; commissie keurt goed en CRM is bijgewerkt; sponsor B geïsoleerd; interne routes geweigerd; geen notities/concepten/interne rechten; axe 390/1440 px. Fixtures en contactadres hersteld. |
+| `test:crm`, `test:contracts`, `test:finance`, `test:reporting`, `test:auth` | Alle geslaagd na fase 8. |
+| `npm run test:e2e` | Productiebuild en 55 browsertests geslaagd (8 nieuwe sessievereisten). |
+| Visuele controle | Portaaloverzicht en contractdetail op 390 px bekeken. |
+
+### Correcties tijdens fase 8
+
+- Parameternamen `answer`/`email` botsten met kolommen; vóór toepassen hernoemd (`reply`, `invitee`).
+- `foundation.test.sql` maakte zelf de clubinstellingenrij aan; nu bestaat die via migratie, dus de
+  fixture gebruikt `on conflict` binnen de teruggedraaide transactie.
+- pgTAP-fixture voor een nieuw Auth-account kreeg expliciet `created_at` (zoals Supabase Auth doet);
+  zonder die waarde weigerde de uitnodigingskoppeling terecht.
+- Actief tabblad eerst via DOM-manipulatie; vervangen door een clientcomponent met `usePathname`.
+
+### Grenzen en open punten
+
+- Het echte contactadres is nog niet ingesteld; dat doet de Super Admin. Er gaat geen e-mail uit
+  het portaal zelf (fase 9 kiest een provider). Uitnodigingsmail loopt via Supabase Auth; productie-
+  SMTP moet nog worden ingericht.
+- Evenementen in het portaal volgen in fase 9. Geen chat of berichtenhistorie.
+- Ingetrokken collega's heractiveren gaat via de commissie (bestaande machtigingsworkflow).
+
+Bestanden: migraties `20261112205008_sponsor_portal.sql`, `…205115_portal_request_volatility.sql`,
+`supabase/tests/portal.test.sql`, aangepaste fixture in `foundation.test.sql`, `src/modules/portal/*`,
+routes `src/app/account/{portaal,verzoeken,instellingen}`, CRM-shell, accountpagina, CSS,
+`scripts/test-portal.mjs`, `tests/portal-schema.test.ts`, e2e-routes, databasetypes, documentatie.
 
 ## Fase 7 — Intern dashboard en rapportages
 
@@ -557,11 +609,11 @@ gepubliceerd of gedeployd; herstel in een nieuwe cloudtaak is niet getest.
 
 ## Open taken en volgende fase
 
-Fase 7 is lokaal geïmplementeerd. Echte gegevens voert de commissie zelf in; ze worden
-niet verzonnen. Fase 8 (Persoonlijk sponsorportaal) vereist een nieuwe opdracht en vooraf:
-gewenste contactroute naar de commissie, welke bedrijfsgegevens sponsors mogen laten
-wijzigen (via verzoek), welke contract-/bewijs-/factuurvelden zichtbaar zijn en of
-sponsors zelf collega's mogen laten uitnodigen. Echte CRM-import blijft een aparte opdracht met proefvalidatie.
+Fase 8 is lokaal geïmplementeerd. De Super Admin moet nog het echte contactadres van de
+commissie instellen. Fase 9 (Acquisitie, evenementen en notificaties) vereist een nieuwe
+opdracht en vooraf: pipelinefasen, taak- en herinneringsregels (bijv. hoeveel dagen vóór
+opzegdatum/vervaldatum), evenementdoelgroepen en capaciteit, aanmelding per bedrijf of per
+persoon en introducés, en welke e-maildienst/afzender gebruikt mag worden. Echte CRM-import blijft een aparte opdracht met proefvalidatie.
 Officieel logo, eerste echte Super Admin en productieconfiguratie blijven open;
 geen waarden of echte persoonsgegevens in Git opgeslagen.
 
@@ -577,3 +629,4 @@ geen waarden of echte persoonsgegevens in Git opgeslagen.
 | 2026-11-12 | 5 | Pakketversies, contracten met regels/rechten, atomaire bevestiging, amendementen, verlenging/beëindiging, uitvoering met bewijs en private contractdocumenten; 380 DB-controles, 41 browsertests en echte contractflow. | D027–D032 |
 | 2026-11-12 | 6 | Facturen incl. 21% BTW, gatenvrije F/C-nummering, termijnen uit contracten, creditnota's met verrekening, handmatige betalingen met vergrendelde toewijzing, restitutie en factuur-PDF; 470 DB-controles, 46 browsertests en echte financiële flow. | D033–D038 |
 | 2026-11-12 | 7 | Dashboard met kerncijfers en drie grafieken per seizoen, CRM-vlag betalend, bestuurstoegang en Excel-export; 513 DB-controles, 47 browsertests en echte rapportageflow. | D039–D042 |
+| 2026-11-12 | 8 | Persoonlijk sponsorportaal: overzicht, samenwerking (huidig + eerder), facturen, wijzigingsverzoeken met commissiebeoordeling, contact via e-mail, collega's uitnodigen/intrekken; 571 DB-controles, 55 browsertests en mobiele flow. | D043–D046 |

@@ -28,6 +28,14 @@ export default async function Account() {
             }[access.role]
           }
         </p>
+        {access.role === "sponsor" && (
+          <Link
+            href="/account/portaal"
+            className="my-6 inline-flex min-h-11 items-center rounded-md bg-primary px-4 font-medium text-primary-foreground"
+          >
+            Naar mijn sponsorportaal
+          </Link>
+        )}
         {companies?.map((company) => (
           <p key={company.id} className="my-4">
             Bedrijf: {company.name}
@@ -56,13 +64,15 @@ export default async function Account() {
             </Link>
           </>
         )}
-        <p className="my-6">
-          Rapportages en het persoonlijke sponsorportaal volgen in latere fases.
-        </p>
         {access.role === "super_admin" && (
-          <Link href="/account/gebruikers" className="my-6 block underline">
-            Gebruiker uitnodigen
-          </Link>
+          <>
+            <Link href="/account/gebruikers" className="my-6 block underline">
+              Gebruiker uitnodigen
+            </Link>
+            <Link href="/account/instellingen" className="my-6 block underline">
+              Clubinstellingen (contactadres portaal)
+            </Link>
+          </>
         )}
         <Link href="/account/beveiliging" className="my-6 block underline">
           Extra accountbeveiliging

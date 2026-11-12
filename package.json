@@ -27,7 +27,8 @@
     "test:crm": "node scripts/test-crm.mjs",
     "test:contracts": "node scripts/test-contracts.mjs",
     "test:finance": "node scripts/test-finance.mjs",
-    "test:reporting": "node scripts/test-reporting.mjs"
+    "test:reporting": "node scripts/test-reporting.mjs",
+    "test:portal": "node scripts/test-portal.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "7.0.6",

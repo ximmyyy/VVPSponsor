@@ -5,5 +5,6 @@ Toekomstige modules: auth, sponsors, packages, contracts, finance, rights, docum
 acquisition, tasks, events, notifications, reporting, public-site en settings.
 Aanwezig: `auth`, `crm` (fase 4) en `contracts` (fase 5: pakketten, contracten,
 rechten en contract-/bewijsdocumenten) `finance` (fase 6: facturen, credits,
-betalingen en toewijzingen) en `reporting` (fase 7: dashboard, grafieken, Excel-export). Maak een module pas aan in de opgedragen fase. Modules krijgen geen service-role-client.
+betalingen en toewijzingen) `reporting` (fase 7: dashboard, grafieken, Excel-export) en `portal` (fase 8: sponsorportaal,
+wijzigingsverzoeken, collega-uitnodigingen). Maak een module pas aan in de opgedragen fase. Modules krijgen geen service-role-client.
 Gedeelde technische primitives staan in `src/lib`; gedeelde UI volgt in fase 2.

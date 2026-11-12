@@ -5,8 +5,8 @@
 Dit is de functionele en technische projectbasis voor het nieuwe sponsorportaal van VV Pernis, een Nederlandse amateurvoetbalvereniging uit Rotterdam. Opdrachtgever is lid van de sponsorcommissie.
 
 - Laatst bijgewerkt: 2026-11-12.
-- Huidige fase: **7 — Intern dashboard en rapportages**, lokaal geïmplementeerd en geverifieerd. Dashboard met kerncijfers en grafieken per seizoen, bestuurstoegang en Excel-export werken.
-- Volgende fase: **8 — Persoonlijk sponsorportaal**, uitsluitend na een nieuwe opdracht. Vooraf nodig: contactroute, toegestane wijzigingsverzoeken, zichtbare contract-/bewijsvelden en beheer van gemachtigden (zie §10).
+- Huidige fase: **8 — Persoonlijk sponsorportaal**, lokaal geïmplementeerd en geverifieerd. Sponsors zien hun samenwerking, rechten, facturen en bedrijfsgegevens, vragen wijzigingen aan, mailen de commissie en beheren collega's.
+- Volgende fase: **9 — Acquisitie, evenementen en notificaties**, uitsluitend na een nieuwe opdracht. Vooraf nodig: pipelinefasen, herinneringsregels, evenementdoelgroepen/capaciteit, aanmeldvorm en e-mailprovider/afzender (zie §10).
 - Alle onderstaande tabellen, routes, policies en processen zijn **ontwerp**, tenzij in `PROGRESS.md` expliciet als geïmplementeerd en geverifieerd vermeld.
 - `PROJECT.md` beschrijft scope, architectuur, bedrijfsregels, ontwerpkeuzes en acceptatiecriteria. `PROGRESS.md` bevat de gedetailleerde voortgang, controles, open taken en bekende problemen. `AGENTS.md` bevat blijvende werkinstructies.
 - Werk na iedere fase de faseaanduiding en belangrijke ontwerpbeslissingen hier bij; leg uitvoeringsdetails in `PROGRESS.md` vast. Ontwerp is geen bewijs van werkende functionaliteit.
@@ -281,6 +281,40 @@ views uit fase 5/6 hergebruikt; de app rekent geen eigen financiële waarheid. E
 gelogd in `private.report_exports` (wie, seizoen, tijd; geen inhoud). Tekst die als formule
 gelezen kan worden (=, +, -, @) krijgt in de export een apostrof; cellen zijn tekst, er staan
 geen formules in het bestand. Respons `private, no-store`.
+
+### Fase 8: persoonlijk sponsorportaal
+
+Echte routes onder `/account/portaal` (alleen actieve sponsoraccounts met actieve
+bedrijfsmachtiging; bedrijf altijd uit de machtiging, nooit uit de URL of het formulier):
+Overzicht, Samenwerking (`/samenwerking`, `/samenwerking/[id]`), Facturen, Bedrijfsgegevens
+en Collega's, plus een Contact-tab. Het fase-2-prototype `/portaal` blijft een lokale
+ontwerpweergave. Opdrachtgeverkeuzes:
+
+- **Contact via e-mail**: Super Admin stelt op `/account/instellingen` het contactadres van de
+  commissie in (`club_settings.contact_email`, singletonrij met clubnaam VV Pernis via migratie).
+  Het portaal toont een `mailto:` met de bedrijfsnaam in het onderwerp; zonder ingesteld adres
+  een duidelijke melding. Het portaal verstuurt zelf geen e-mail.
+- **Wijzigingsverzoeken** voor bedrijfsnaam, handelsnaam, website, plaats, KvK, BTW-nummer,
+  straat, postcode, zakelijk e-mailadres en telefoon (`sponsor_requests`). Server én database
+  laten alleen deze velden toe met dezelfde validatie als het CRM, slaan alleen werkelijk
+  gewijzigde velden op en beperken tot vijf open verzoeken. De commissie beoordeelt op
+  `/account/verzoeken`: goedkeuren past de wijziging atomair toe in `sponsors`/`sponsor_internal`
+  en bewaart de vorige waarden; afwijzen vereist een toelichting. Afgehandelde verzoeken zijn
+  onveranderlijk; sponsors kunnen open verzoeken intrekken. Interne velden (status, notities,
+  betaalvlag, verantwoordelijke) zijn nooit zichtbaar of aanvraagbaar; `portal_company()` geeft
+  alleen de logische zakelijke velden.
+- **Samenwerking**: lopende en eerdere vastgelegde contracten met regels (incl. BTW), alleen
+  portaalzichtbare rechten met status en gedeelde uitvoering/bewijs, wijzigingen (amendementen)
+  en gedeelde documenten. Concepten en interne rechten blijven verborgen (RLS uit fase 5).
+- **Facturen**: eigen uitgereikte facturen/credits met status en open bedrag, gedeelde PDF's en
+  verwerkte betalingen (RLS uit fase 6); geen concepten.
+- **Collega's**: een sponsor nodigt collega's uit voor het eigen bedrijf
+  (`sponsor_invitations`, max. 10 per dag, 7 dagen geldig) en trekt hun toegang in (niet de eigen
+  toegang). Auth-uitnodiging via de bestaande server-only adminclient; koppelen gebeurt met het
+  eigen JWT en alleen voor een account met hetzelfde e-mailadres dat ná de uitnodiging is
+  aangemaakt en nog geen rol of machtiging heeft. Een bestaand account kan zo niet worden
+  overgenomen. Heractiveren van een ingetrokken account gaat via de commissie.
+- Verzoeken, beoordelingen en uitnodigingen staan in de CRM-audit.
 
 ## 2. Doel en productgrenzen
 
@@ -687,7 +721,7 @@ Deze punten blokkeren de initialisatie niet. Vraag ze op bij de relevante fase; 
 | Fase 5 | Module gebouwd; nog aan te leveren: echte pakketten, prijzen, rechten, looptijden, voorwaarden en contracttemplates (invoer door de commissie zelf), wie uitvoering formeel goedkeurt (vier-ogen gewenst?), welk bewijs sponsoren mogen zien, en of contractnummering een bestaand formaat moet volgen. |
 | Fase 6 | Vastgesteld: incl. 21% BTW, F/C-nummering, handmatige vervaldatum, commissie + Super Admin. Nog open: seizoen/boekjaar voor rapportage, bestaande facturatiesoftware/export, of de vereniging voor alle sponsoring BTW-plichtig is (fiscaal advies), en welke bestuursoverzichten nodig zijn. |
 | Fase 7 | Vastgesteld: kerncijfers (actieve betalende sponsors en budget, aflopende contracten, kansen), actieve sponsor = betalend + actief, seizoen juli–juni, bestuur alle cijfers, Excel. Nog open: eventuele extra KPI's en een echte pipeline (fase 9). |
-| Fase 8 | Gewenste sponsorcontactroute, toegestane wijzigingsverzoeken, zichtbare contract-/bewijsvelden en beheer van gemachtigden. |
+| Fase 8 | Vastgesteld: contact via e-mail, wijzigingsverzoeken voor logische bedrijfsvelden, eigen huidige en eerdere contracten, sponsors mogen collega's uitnodigen. Nog in te vullen: het echte contactadres (Super Admin, `/account/instellingen`). |
 | Fase 9 | Pipelinefasen, taken-/herinneringsregels, evenementdoelgroepen, capaciteit, bedrijfs- of persoonsaanmelding, introducés, notificatiekanalen en afzender. |
 | Fase 10 | Per bedrijf toegestane publicatievelden/logo's en bewijs daarvan; openbare teksten, privacyverklaring, bewaartermijnen, clubcontactgegevens, domein/DNS, hostingbudget, beheer-/back-upverantwoordelijkheid en productieopdracht. |
 
@@ -743,6 +777,10 @@ Accounts en secrets via veilige provider-/omgevingsinstellingen aanleveren, niet
 | D040 | 2026-11-12 | Vastgelegd door opdrachtgever | Bestuur ziet alle cijfers van dashboard en export, uitsluitend via de begrensde rapportfunctie; geen notities, contactpersonen, accountgegevens of directe tabeltoegang. Export in Excel. |
 | D041 | 2026-11-12 | Vastgelegd | Contractwaarde per seizoen naar rato van looptijddagen (bij beëindiging tot beëindigingsdatum); gefactureerd op factuurdatum minus credits; ontvangen op ontvangstdatum minus terugbetalingen; openstaand/vervallen op peildatum. Alle bedragen incl. BTW. |
 | D042 | 2026-11-12 | Vastgelegd | Recharts 3.10.1 en ExcelJS 4.4.0 exact gepind; `uuid` binnen ExcelJS via npm-override op 11.1.1 (audit 0 kwetsbaarheden). Export zonder formules, formule-achtige tekst geneutraliseerd, exports gelogd. |
+| D043 | 2026-11-12 | Vastgelegd door opdrachtgever | Sponsorcontact via e-mail naar een door Super Admin ingesteld clubadres (mailto). Wijzigingsverzoeken voor logische bedrijfsvelden (naam, handelsnaam, website, plaats, KvK, BTW, adres, zakelijk e-mail/telefoon), beoordeeld door commissie. |
+| D044 | 2026-11-12 | Vastgelegd door opdrachtgever | Sponsor ziet eigen lopende en eerdere vastgelegde contracten met zichtbare rechten, gedeelde uitvoering/documenten en eigen facturen. |
+| D045 | 2026-11-12 | Vastgelegd door opdrachtgever | Sponsors nodigen collega's uit voor het eigen bedrijf en trekken hun toegang in. Koppeling alleen aan een nieuw, door de uitnodiging aangemaakt account met gelijk e-mailadres; heractiveren via commissie. |
+| D046 | 2026-11-12 | Vastgelegd | Echte portaalroutes onder `/account/portaal`; het fase-2-prototype `/portaal` blijft lokaal. Bedrijfs-ID uitsluitend uit de actieve machtiging. |
 
 ### Bronnen voor latere technische verificatie
 
@@ -791,4 +829,9 @@ Fase 7 is lokaal geverifieerd met 24 Node-tests, 513 databasecontroles (43 nieuw
 browserregressies, SQL-lint zonder bevindingen, de echte rapportageflow (`npm run
 test:reporting`: dashboard, grafieken, Excel-download teruggelezen, bestuur/sponsor/anoniem)
 en geslaagde CRM-, contract-, financiële en authregressies. Alle 18 migraties en 513 controles
-werken op een nieuwe lege stack. Fase 8 is niet gestart.
+werken op een nieuwe lege stack.
+
+Fase 8 is lokaal geverifieerd met 28 Node-tests, 571 databasecontroles (58 nieuw), 55
+browserregressies, SQL-lint zonder bevindingen, de volledige mobiele sponsorflow (`npm run
+test:portal`, 390 px) en geslaagde CRM-, contract-, financiële, rapportage- en authregressies.
+Alle 20 migraties en 571 controles werken op een nieuwe lege stack. Fase 9 is niet gestart.

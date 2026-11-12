@@ -1372,3 +1372,23 @@ a {
   border-color: #f1b5b5;
   color: #8a1c1c;
 }
+
+/* Fase 8: sponsorportaal. */
+.portal-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  color: var(--foreground);
+}
+.portal-tab:hover {
+  color: var(--primary);
+  border-bottom-color: var(--border);
+}
+.portal-tab[aria-current="page"] {
+  color: var(--primary);
+  font-weight: 600;
+  border-bottom-color: var(--primary);
+}
