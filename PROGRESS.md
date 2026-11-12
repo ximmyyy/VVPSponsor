@@ -14,7 +14,8 @@
 - Fase **8 — Persoonlijk sponsorportaal**: lokaal afgerond en geverifieerd.
 - **Testgereedheid** (logo, logokleuren, performance): afgerond en geverifieerd op een productiebuild.
 - Fase **9 — Acquisitie, evenementen en notificaties**: **op pauze** op verzoek van de opdrachtgever.
-- Volgende mogelijke opdracht: testomgeving (hosted Supabase + Vercel-preview) of fase 10.
+- **Testomgeving live**: https://vvp-sponsorportaal-test.vercel.app (zie sectie Testomgeving).
+- Volgende mogelijke opdracht: echte SMTP/uitnodigingen, overige fase 10 of fase 9 (op pauze).
 - Er werkt een technische Next.js-basis met minimale lokale database. Er werken nu
   login, gecontroleerde uitnodigingen en een private Storage-basis. Er is nog geen
   volledige sponsoradministratie of deployment. De startpagina meldt dit expliciet.
@@ -36,6 +37,35 @@
 | 8 | Persoonlijk sponsorportaal | Lokaal afgerond |
 | 9 | Acquisitie, evenementen en notificaties | Op pauze (D047) |
 | 10 | Publieke sponsorwebsite en productievoorbereiding | Deels: huisstijl en performance; publieke site/productie niet gestart |
+
+## Testomgeving (hosted)
+
+Opdracht: Supabase en Vercel via de gekoppelde connectors, SMTP voorlopig niet nodig.
+
+| Onderdeel | Stand |
+| --- | --- |
+| Supabase | Project `vvp-sponsorportaal-test` (ref `decmdobylhgxihiwssrs`, eu-central-1), organisatie van de opdrachtgever, zonder kosten aangemaakt. |
+| Migraties | Alle 22 toegepast; versies gelijk aan de repository. 1–10 via de Supabase-connector; 11–22 via de Management API (de connectorbevestiging verscheen niet in de app), elk in één transactie met historie-registratie. |
+| Schemacontrole | Automatische vergelijking met de lokaal geteste database: functies (91), policies (36), kolommen (330), constraints (241), indexen (98), triggers (55), tabel-/kolom-/functierechten, RLS en bucket: **identiek**. |
+| Advisors | Security: alleen verwachte meldingen (private tabellen zonder policies = bewust geen API-toegang; 47 begrensde definer-RPC's voor ingelogde gebruikers met eigen rolcontrole); géén anon-uitvoerbare functies. Performance: alleen informatief (lege database). |
+| Auth | Site-URL en redirect-allowlist op de test-URL, registratie uit, wachtwoord ≥ 12, herauthenticatie bij wachtwoordwijziging, TOTP-MFA aan, anonieme login uit. Geen eigen SMTP (Supabase-standaardmail, alleen beperkt bruikbaar). |
+| Vercel | Project `vvp-sponsorportaal-test` (team ximmyyy, regio fra1, Node 24), gekoppeld aan `ximmyyy/VVPSponsor`. Variabelen: `APP_ENV=staging`, Supabase-URL, publishable key, app-URL. Geen server-secret. Vercel-authenticatie alleen op preview-builds; de test-URL is openbaar bereikbaar en de app vraagt zelf om in te loggen. |
+| Deployment | Productie-deployment van branch `claude/zealous-pascal-pc80uw` (commit `6e4b43b`) op https://vvp-sponsorportaal-test.vercel.app. |
+| Rooktest live | Start 200 met logo; `/inloggen` werkt; `/account`, dashboard, portaal, financiën → login; `/beheer`, `/portaal`, `/ontwerp` 404 no-store; private reacties no-store/no-referrer; favicon; anonieme Data API en `report_dashboard` 401; openbare registratie geweigerd (`signup_disabled`); geen browserfouten. |
+
+### Gebruik en beperkingen
+
+- **Eerste Super Admin**: maak in het Supabase-dashboard (Authentication → Users → Add user →
+  Create new user, met "Auto Confirm User") een account met een sterk wachtwoord. Daarna wordt
+  het via een eenmalige SQL-toekenning `super_admin` (geen publiek bootstrap-endpoint).
+- **Testaccounts**: op dezelfde manier aanmaken; rol/bedrijf toekennen via SQL of de
+  Super Admin-rolbeheerfunctie. Uitnodigingsmails werken niet zonder SMTP en server-secret.
+- Pushes naar de werkbranch maken (beveiligde) preview-builds; de vaste test-URL wordt alleen
+  bijgewerkt via een nieuwe productie-deployment. Productiebranch van Vercel is `main`.
+- Supabase-token voor de Management API staat als netwerkgeheim in de standaardomgeving van
+  deze cloudsessies; intrekken in Supabase (Account → Access Tokens) na afloop van de test.
+- Geen echte sponsorgegevens invoeren zolang privacyverklaring, bewaartermijnen en
+  verwerkersafspraken niet zijn vastgesteld; gebruik herkenbare TEST-gegevens.
 
 ## Testgereedheid — logo, kleuren en performance
 
@@ -690,3 +720,4 @@ geen waarden of echte persoonsgegevens in Git opgeslagen.
 | 2026-11-12 | 7 | Dashboard met kerncijfers en drie grafieken per seizoen, CRM-vlag betalend, bestuurstoegang en Excel-export; 513 DB-controles, 47 browsertests en echte rapportageflow. | D039–D042 |
 | 2026-11-12 | 8 | Persoonlijk sponsorportaal: overzicht, samenwerking (huidig + eerder), facturen, wijzigingsverzoeken met commissiebeoordeling, contact via e-mail, collega's uitnodigen/intrekken; 571 DB-controles, 55 browsertests en mobiele flow. | D043–D046 |
 | 2026-11-12 | 9/10 | Fase 9 op pauze. Testgereedheid: officieel logo en logokleuren, sponsor-RLS en rapportage geoptimaliseerd (tot 200× sneller), Auth één keer per verzoek, meetscript `test:perf`; alle flows op productiebuild groen. | D047–D050 |
+| 2026-11-12 | 10 | Testomgeving live: Supabase (22 migraties, schema identiek) en Vercel-productie-deployment, Auth ingesteld, live rooktest geslaagd. | D051 |

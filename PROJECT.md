@@ -7,7 +7,7 @@ Dit is de functionele en technische projectbasis voor het nieuwe sponsorportaal 
 - Laatst bijgewerkt: 2026-11-12.
 - Huidige stand: fases 1–8 lokaal geïmplementeerd en geverifieerd, plus **testgereedheid**: officieel logo en logokleuren, en performance-optimalisatie gemeten op een productiebuild met volumedata.
 - **Fase 9 (acquisitie, evenementen, notificaties/mailing) staat op verzoek van de opdrachtgever op pauze** (D047). Niet starten zonder nieuwe opdracht.
-- Volgende mogelijke stap: een **testomgeving** (hosted Supabase-project + Vercel-preview) of de overige onderdelen van fase 10, uitsluitend na expliciete opdracht.
+- **Testomgeving staat live** (D051): https://vvp-sponsorportaal-test.vercel.app met Supabase-project `vvp-sponsorportaal-test` (Frankfurt). Geen productie; geen echte gegevens; geen SMTP.
 - Alle onderstaande tabellen, routes, policies en processen zijn **ontwerp**, tenzij in `PROGRESS.md` expliciet als geïmplementeerd en geverifieerd vermeld.
 - `PROJECT.md` beschrijft scope, architectuur, bedrijfsregels, ontwerpkeuzes en acceptatiecriteria. `PROGRESS.md` bevat de gedetailleerde voortgang, controles, open taken en bekende problemen. `AGENTS.md` bevat blijvende werkinstructies.
 - Werk na iedere fase de faseaanduiding en belangrijke ontwerpbeslissingen hier bij; leg uitvoeringsdetails in `PROGRESS.md` vast. Ontwerp is geen bewijs van werkende functionaliteit.
@@ -807,6 +807,7 @@ Accounts en secrets via veilige provider-/omgevingsinstellingen aanleveren, niet
 | D048 | 2026-11-12 | Vastgelegd door opdrachtgever | Officieel logo toegepast; clubkleuren uit het logo (#045EA7, #EA751D) zijn leidend. Oranje alleen als accent, niet voor tekst. |
 | D049 | 2026-11-12 | Vastgelegd | Sponsor-RLS via `sponsor_id = (select private.current_sponsor())` (InitPlan) i.p.v. per-rij-helper; semantisch gelijk, getest met de volledige beveiligingssuite. |
 | D050 | 2026-11-12 | Vastgelegd | Proxy: `getClaims()` voor sessieverversing; pagina's: `getUser()` + DB-autorisatie, gecachet per request. Performance-regressie via `npm run test:perf` op een productiebuild. |
+| D051 | 2026-11-12 | Vastgelegd door opdrachtgever | Testomgeving: Supabase-project `vvp-sponsorportaal-test` (eu-central-1) met alle 22 migraties (schema aantoonbaar identiek aan lokaal), Vercel-project `vvp-sponsorportaal-test` (fra1, Node 24, `APP_ENV=staging`). Geen SMTP en geen `SUPABASE_SECRET_KEY` op Vercel: uitnodigen per mail staat uit; testaccounts via Supabase-dashboard. Registratie uit, wachtwoord ≥ 12, MFA aan. |
 
 ### Bronnen voor latere technische verificatie
 
