@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
-/* Alleen aangeleverde clubkleuren; ondersteunende neutralen zijn ontwerptokens. */
+/* Clubkleuren uit het officiële logo; ondersteunende neutralen zijn ontwerptokens. */
 :root {
-  --brand-primary: #125b9e;
-  --brand-accent: #e67522;
+  --brand-primary: #045ea7;
+  --brand-primary-dark: #034a85;
+  --brand-accent: #ea751d;
   --background: #f4f6f9;
   --foreground: #142b43;
   --card: #fff;
@@ -17,7 +18,7 @@
   --sidebar: #102d48;
   --sidebar-foreground: #fff;
   --sidebar-muted: #b8c9da;
-  --ring: #125b9e;
+  --ring: #045ea7;
 }
 @theme inline {
   --color-background: var(--background);
@@ -117,29 +118,10 @@ a {
   gap: 0.8rem;
   color: var(--foreground);
 }
-.brand-mark {
-  display: flex;
-  position: relative;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  color: white;
-  border-radius: 0.7rem 0.7rem 0.7rem 0.1rem;
-  background: var(--brand-primary);
-  font-weight: 800;
-  font-size: 1rem;
-  letter-spacing: -0.08em;
-}
-.brand-dot {
-  position: absolute;
-  width: 0.55rem;
-  height: 0.55rem;
-  border: 2px solid white;
-  border-radius: 100%;
-  bottom: 0.4rem;
-  right: 0.35rem;
-  background: var(--brand-accent);
+.brand-logo {
+  display: block;
+  flex: none;
+  height: auto;
 }
 .brand-name {
   font-size: 1rem;
@@ -159,10 +141,6 @@ a {
 }
 .brand-inverse .brand-name > span {
   color: var(--sidebar-muted);
-}
-.brand-inverse .brand-mark {
-  background: #fff;
-  color: var(--brand-primary);
 }
 .public-shell {
   min-height: 100svh;
@@ -1228,7 +1206,8 @@ a {
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
 }
 .dash-hero {
-  background: linear-gradient(135deg, #0f4c85 0%, #125b9e 60%, #1a6db8 100%);
+  background: linear-gradient(135deg, var(--brand-primary-dark) 0%, var(--brand-primary) 65%, #1a6fb8 100%);
+  border-bottom: 4px solid var(--brand-accent);
   color: #fff;
   border-radius: 0.75rem;
   padding: 1.75rem;
@@ -1391,4 +1370,9 @@ a {
   color: var(--primary);
   font-weight: 600;
   border-bottom-color: var(--primary);
+}
+
+/* Clubaccent: oranje lijn uit het logo boven de app-koppen (decoratief, geen tekst). */
+.brand-header {
+  border-top: 4px solid var(--brand-accent);
 }

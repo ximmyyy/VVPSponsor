@@ -2,8 +2,8 @@
 
 Technische basis voor één modulaire Next.js-app met Supabase. Fases 1–8 zijn lokaal geïmplementeerd: technische basis, layouts, authenticatie,
 sponsor-CRM, pakketten/contracten/sponsorrechten, financieel beheer, dashboard met
-rapportages en het persoonlijke sponsorportaal. Acquisitie, evenementen, notificaties
-en de publieke sponsorwebsite volgen later.
+rapportages en het persoonlijke sponsorportaal. Acquisitie, evenementen en notificaties
+(fase 9) staan op pauze; de publieke sponsorwebsite volgt later.
 Lees bij ontwikkeling eerst [PROJECT.md](PROJECT.md), [PROGRESS.md](PROGRESS.md)
 en [AGENTS.md](AGENTS.md). Gebruik de bestaande checkout; een cloudtaak is al geïsoleerd.
 
@@ -330,10 +330,35 @@ bedrijfsgegevens met wijzigingsverzoek, collega's en een Contact-knop (e-mail).
 ```sh
 npm run db:migrate && npm run db:types
 npm run db:test          # 571 controles
-npm test                 # 28 tests
+npm test                 # 28 tests (actueel)
 npm run dev
 # Tweede terminal; niet parallel met andere integratiescripts:
 npm run test:portal      # volledige mobiele sponsorflow
 ```
 
 Stop daarna de devserver voor `npm run test:e2e` (55 tests).
+
+## Testgereedheid: logo, kleuren en performance
+
+Het officiële logo staat in `public/brand/` en wordt overal via `next/image` getoond;
+clubkleuren komen uit het logo (`src/lib/branding.ts`, `globals.css`).
+
+**Lokaal testen zoals een gebruiker** (productiebuild):
+
+```sh
+npm run db:start && npm run db:migrate
+npm run build
+pkill -f next-server || true   # geen oude server laten draaien
+npm start                      # http://localhost:3000
+```
+
+**Performance meten** (tweede terminal, productiebuild draait, niet tegelijk met andere tests):
+
+```sh
+npm run test:perf              # tijdelijke PERF-volumedata, meet, ruimt op
+PERF_SPONSORS=1000 npm run test:perf
+node scripts/test-perf.mjs --cleanup-only   # alleen opruimen
+```
+
+Er is nog geen gedeelde testomgeving; die vereist een hosted Supabase-project en
+Vercel-preview (zie `PROGRESS.md`, open taken).

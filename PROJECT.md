@@ -5,8 +5,9 @@
 Dit is de functionele en technische projectbasis voor het nieuwe sponsorportaal van VV Pernis, een Nederlandse amateurvoetbalvereniging uit Rotterdam. Opdrachtgever is lid van de sponsorcommissie.
 
 - Laatst bijgewerkt: 2026-11-12.
-- Huidige fase: **8 — Persoonlijk sponsorportaal**, lokaal geïmplementeerd en geverifieerd. Sponsors zien hun samenwerking, rechten, facturen en bedrijfsgegevens, vragen wijzigingen aan, mailen de commissie en beheren collega's.
-- Volgende fase: **9 — Acquisitie, evenementen en notificaties**, uitsluitend na een nieuwe opdracht. Vooraf nodig: pipelinefasen, herinneringsregels, evenementdoelgroepen/capaciteit, aanmeldvorm en e-mailprovider/afzender (zie §10).
+- Huidige stand: fases 1–8 lokaal geïmplementeerd en geverifieerd, plus **testgereedheid**: officieel logo en logokleuren, en performance-optimalisatie gemeten op een productiebuild met volumedata.
+- **Fase 9 (acquisitie, evenementen, notificaties/mailing) staat op verzoek van de opdrachtgever op pauze** (D047). Niet starten zonder nieuwe opdracht.
+- Volgende mogelijke stap: een **testomgeving** (hosted Supabase-project + Vercel-preview) of de overige onderdelen van fase 10, uitsluitend na expliciete opdracht.
 - Alle onderstaande tabellen, routes, policies en processen zijn **ontwerp**, tenzij in `PROGRESS.md` expliciet als geïmplementeerd en geverifieerd vermeld.
 - `PROJECT.md` beschrijft scope, architectuur, bedrijfsregels, ontwerpkeuzes en acceptatiecriteria. `PROGRESS.md` bevat de gedetailleerde voortgang, controles, open taken en bekende problemen. `AGENTS.md` bevat blijvende werkinstructies.
 - Werk na iedere fase de faseaanduiding en belangrijke ontwerpbeslissingen hier bij; leg uitvoeringsdetails in `PROGRESS.md` vast. Ontwerp is geen bewijs van werkende functionaliteit.
@@ -315,6 +316,27 @@ ontwerpweergave. Opdrachtgeverkeuzes:
   aangemaakt en nog geen rol of machtiging heeft. Een bestaand account kan zo niet worden
   overgenomen. Heractiveren van een ingetrokken account gaat via de commissie.
 - Verzoeken, beoordelingen en uitnodigingen staan in de CRM-audit.
+
+### Testgereedheid: huisstijl en performance
+
+- **Logo**: het aangeleverde officiële logo staat in `public/brand/vv-pernis-logo.png` en wordt via
+  `next/image` (statische import, vaste afmetingen, WebP/AVIF in de juiste maat) gebruikt in alle
+  koppen en groot op het inlogscherm. Favicon en Apple-icoon zijn uit het logo afgeleid.
+- **Kleuren**: uit het logo gemeten blauw **#045EA7** en oranje **#EA751D** vervangen de eerder
+  opgegeven, nagenoeg gelijke #125B9E/#E67522. Blauw haalt 6,6:1 op wit (tekst/knoppen); oranje
+  2,97:1 en wordt dus alleen als accent gebruikt (lijn boven de app-koppen, statusstippen, grafiek),
+  nooit als kleine tekst. Grafiekpalet opnieuw gevalideerd (CVD ΔE 11,1; legenda + tabel).
+- **Performance** (gemeten met `npm run test:perf`, productiebuild, 400 sponsors/800 contracten/
+  2.000 facturen/1.600 betalingen):
+  - RLS voor sponsoren vergelijkt `sponsor_id` nu met één keer per query bepaalde eigen machtiging
+    (`private.current_sponsor()`) i.p.v. een helper per rij: sponsorfacturen 967 → 5 ms,
+    sponsorcontracten 383 → 2 ms, CRM-lijst 54 → 2 ms. Alle 571 beveiligingscontroles ongewijzigd groen.
+  - Rapportfunctie met vooraf gegroepeerde totalen: 190 → 85 ms (export 232 → 139 ms).
+  - Auth: proxy gebruikt `getClaims()` (lokale verificatie met asymmetrische sleutel, sessie-
+    verversing zonder Auth-serverronde); `requireAccess()` blijft `getUser()` + DB-rechten
+    gebruiken, maar via React `cache()` één keer per verzoek in plaats van per layout én pagina.
+  - Resultaat: alle gemeten pagina's volledig geladen in ±40–50 ms, dashboard ±165 ms (was tot 276 ms).
+  - Geen extra indexen op actor-/auditkolommen: geen querydoel; hoofdpaden gebruiken bestaande indexen.
 
 ## 2. Doel en productgrenzen
 
@@ -781,6 +803,10 @@ Accounts en secrets via veilige provider-/omgevingsinstellingen aanleveren, niet
 | D044 | 2026-11-12 | Vastgelegd door opdrachtgever | Sponsor ziet eigen lopende en eerdere vastgelegde contracten met zichtbare rechten, gedeelde uitvoering/documenten en eigen facturen. |
 | D045 | 2026-11-12 | Vastgelegd door opdrachtgever | Sponsors nodigen collega's uit voor het eigen bedrijf en trekken hun toegang in. Koppeling alleen aan een nieuw, door de uitnodiging aangemaakt account met gelijk e-mailadres; heractiveren via commissie. |
 | D046 | 2026-11-12 | Vastgelegd | Echte portaalroutes onder `/account/portaal`; het fase-2-prototype `/portaal` blijft lokaal. Bedrijfs-ID uitsluitend uit de actieve machtiging. |
+| D047 | 2026-11-12 | Vastgelegd door opdrachtgever | Fase 9 (acquisitie en mailing/notificaties) op pauze; eerst afronden en testen van de bestaande app. |
+| D048 | 2026-11-12 | Vastgelegd door opdrachtgever | Officieel logo toegepast; clubkleuren uit het logo (#045EA7, #EA751D) zijn leidend. Oranje alleen als accent, niet voor tekst. |
+| D049 | 2026-11-12 | Vastgelegd | Sponsor-RLS via `sponsor_id = (select private.current_sponsor())` (InitPlan) i.p.v. per-rij-helper; semantisch gelijk, getest met de volledige beveiligingssuite. |
+| D050 | 2026-11-12 | Vastgelegd | Proxy: `getClaims()` voor sessieverversing; pagina's: `getUser()` + DB-autorisatie, gecachet per request. Performance-regressie via `npm run test:perf` op een productiebuild. |
 
 ### Bronnen voor latere technische verificatie
 
@@ -834,4 +860,9 @@ werken op een nieuwe lege stack.
 Fase 8 is lokaal geverifieerd met 28 Node-tests, 571 databasecontroles (58 nieuw), 55
 browserregressies, SQL-lint zonder bevindingen, de volledige mobiele sponsorflow (`npm run
 test:portal`, 390 px) en geslaagde CRM-, contract-, financiële, rapportage- en authregressies.
-Alle 20 migraties en 571 controles werken op een nieuwe lege stack. Fase 9 is niet gestart.
+Alle 20 migraties en 571 controles werken op een nieuwe lege stack.
+
+Testgereedheid (logo, kleuren, performance) is geverifieerd op een productiebuild: alle zes
+integratieflows (auth, CRM, contracten, financiën, rapportage, portaal), 28 Node-tests, 571
+databasecontroles, 55 browsertests, SQL-lint en de performancemeting. Alle 22 migraties werken op
+een nieuwe lege stack. Fase 9 staat op pauze; er is geen hosted omgeving of deployment.

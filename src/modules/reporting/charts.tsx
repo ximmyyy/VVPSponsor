@@ -12,10 +12,10 @@ import {
   YAxis,
 } from "recharts";
 
-/** Clubblauw, cluboranje en aqua: gevalideerd (CVD ΔE 10,6; aqua < 3:1 → legenda + tabel). */
+/** Logoblauw, logo-oranje en aqua: gevalideerd (CVD ΔE 11,1; oranje/aqua < 3:1 → legenda + tabel). */
 export const SERIES = {
-  contract: "#125B9E",
-  invoiced: "#E67522",
+  contract: "#045EA7",
+  invoiced: "#EA751D",
   received: "#1baf7a",
 } as const;
 const GRID = "#e6ecf2";
@@ -142,7 +142,7 @@ export function SeasonChart({
             />
             <Tooltip
               content={<ChartTooltip />}
-              cursor={{ fill: "rgba(18,91,158,0.06)" }}
+              cursor={{ fill: "rgba(4,94,167,0.06)" }}
             />
             <Bar
               dataKey="contract_value"
@@ -276,7 +276,7 @@ export function TopSponsorsChart({
           />
           <Tooltip
             content={<ChartTooltip />}
-            cursor={{ fill: "rgba(18,91,158,0.06)" }}
+            cursor={{ fill: "rgba(4,94,167,0.06)" }}
           />
           <Bar
             dataKey="value"

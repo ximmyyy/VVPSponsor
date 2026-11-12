@@ -18,7 +18,7 @@ export function PortalShell({
       <a href="#inhoud" className="skip-link">
         Direct naar inhoud
       </a>
-      <header className="border-b border-border bg-white">
+      <header className="brand-header border-b border-border bg-white">
         <div className="crm-width flex flex-wrap items-center justify-between gap-3 py-4">
           <Link
             href="/account/portaal"

@@ -28,11 +28,11 @@ export default async function DesignPage() {
             <div className="swatches">
               <div>
                 <span className="swatch swatch-blue" />
-                Clubblauw <code>#125B9E</code>
+                Clubblauw <code>#045EA7</code>
               </div>
               <div>
                 <span className="swatch swatch-orange" />
-                Cluboranje <code>#E67522</code>
+                Cluboranje <code>#EA751D</code>
               </div>
             </div>
             <p className="my-5 text-sm text-muted-foreground">

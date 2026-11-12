@@ -12,11 +12,13 @@
 - Fase **6 — Financieel beheer**: lokaal afgerond en geverifieerd.
 - Fase **7 — Intern dashboard en rapportages**: lokaal afgerond en geverifieerd.
 - Fase **8 — Persoonlijk sponsorportaal**: lokaal afgerond en geverifieerd.
-- Volgende opdracht kan fase **9 — Acquisitie, evenementen en notificaties** zijn. Die is niet gestart.
+- **Testgereedheid** (logo, logokleuren, performance): afgerond en geverifieerd op een productiebuild.
+- Fase **9 — Acquisitie, evenementen en notificaties**: **op pauze** op verzoek van de opdrachtgever.
+- Volgende mogelijke opdracht: testomgeving (hosted Supabase + Vercel-preview) of fase 10.
 - Er werkt een technische Next.js-basis met minimale lokale database. Er werken nu
   login, gecontroleerde uitnodigingen en een private Storage-basis. Er is nog geen
   volledige sponsoradministratie of deployment. De startpagina meldt dit expliciet.
-- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D046. Werkinstructies:
+- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D050. Werkinstructies:
   [AGENTS.md](AGENTS.md). Installatie/start: [README.md](README.md).
 
 ## Fasestatus
@@ -32,8 +34,65 @@
 | 6 | Financieel beheer | Lokaal afgerond |
 | 7 | Intern dashboard en rapportages | Lokaal afgerond |
 | 8 | Persoonlijk sponsorportaal | Lokaal afgerond |
-| 9 | Acquisitie, evenementen en notificaties | Niet gestart |
-| 10 | Publieke sponsorwebsite en productievoorbereiding | Niet gestart |
+| 9 | Acquisitie, evenementen en notificaties | Op pauze (D047) |
+| 10 | Publieke sponsorwebsite en productievoorbereiding | Deels: huisstijl en performance; publieke site/productie niet gestart |
+
+## Testgereedheid — logo, kleuren en performance
+
+Opdracht: acquisitie en mailing op pauze, app performance-technisch afmaken zodat hij getest
+kan worden, clubkleuren en logo toepassen.
+
+- Logo (`public/brand/vv-pernis-logo.png`, bijgesneden en geoptimaliseerd) via `next/image` in
+  alle koppen en groot op `/inloggen`; `src/app/icon.png` (2 KB) en `apple-icon.png` (9 KB).
+- Kleuren uit het logo: #045EA7 / #EA751D in `branding.ts`, CSS-tokens, dashboardhero en
+  grafieken; oranje accentlijn boven de interne en portaalkop. Ontwerppagina bijgewerkt.
+- Performance: migraties `rls_performance` (17 policies + `sponsors_read`) en
+  `reporting_performance`; `getClaims()` in de proxy; `requireAccess()` met React `cache()`.
+- Nieuw meetscript `npm run test:perf` (productiebuild vereist): tijdelijke PERF-volumedata,
+  databasetijden met echte rol/RLS (`explain analyze`, mediaan van 5) en paginatijden (mediaan
+  van 7), daarna opruimen. `PERF_KEEP=1` laat data staan; `--cleanup-only` ruimt op.
+
+| Meting (400 sponsors, productiebuild) | Voor | Na |
+| --- | --- | --- |
+| Sponsor: eigen facturen met saldi (DB) | 967 ms | 5 ms |
+| Sponsor: eigen contracten (DB) | 383 ms | 2 ms |
+| CRM-lijst (DB) | 54 ms | 2 ms |
+| Rapportfunctie dashboard / export (DB) | 190 / 232 ms | 85 / 139 ms |
+| `/account/sponsors` volledig geladen | 159 ms | 43 ms |
+| `/account/contracten` / `/financien` / `/sponsorrechten` | 117 / 111 / 184 ms | 43 / 41 / 45 ms |
+| Dashboard commissie / bestuur | 276 / 251 ms | 167 / 162 ms |
+| Portaal overzicht / samenwerking / facturen | 63 / 47 / 54 ms | 50 / 42 / 42 ms |
+
+Lokale meting op één machine (database en server lokaal); absolute waarden in een hosted
+omgeving liggen hoger door netwerklatentie, de verhoudingen zijn representatief.
+
+| Controle | Resultaat |
+| --- | --- |
+| `npm run lint`, `npm run typecheck` | Geslaagd. |
+| `npm test` | 28 geslaagd. |
+| `npm run db:test` | 571 geslaagd, ongewijzigd na de RLS-herschrijving. |
+| SQL-lint fail-on warning | Geslaagd. |
+| Lege lokale stack (VVPSponsorPerfReplay) | 22 migraties en 571 controles geslaagd; gestopt zonder volumes te wissen. |
+| Integratieflows op productiebuild | `test:auth`, `test:crm`, `test:contracts`, `test:finance`, `test:reporting`, `test:portal` alle geslaagd. |
+| `npm run test:e2e` | 55 geslaagd. |
+| Visuele controle | Startpagina, inloggen (1280/390 px), dashboard en portaal met logo bekeken; favicon 200 image/png. |
+
+### Correcties en lessen
+
+- Eerste paginameting liep tegen een achtergebleven oude `next-server` (proces heet niet
+  `next start`); daardoor faalden flows op ontbrekende CSS en waren de eerste "na"-paginacijfers
+  ongeldig. Alle Next-processen gestopt, opnieuw gestart en opnieuw gemeten; alleen die cijfers
+  staan hierboven. Gebruik `pkill -f next-server` vóór een nieuwe `next start`.
+- PERF-data met `PERF_KEEP` liet tijdelijk 400 extra bedrijven staan; databasetests die bedrijven
+  tellen faalden daardoor. Na `--cleanup-only` alles groen. Draai `test:perf` nooit tegelijk met tests.
+- Seed-SQL (dubbele kolom) en JSON-parsing van het queryplan in het meetscript gecorrigeerd.
+
+### Grenzen
+
+- Geen hosted testomgeving, productiedatabase of deployment aangemaakt (vereist expliciete opdracht).
+- Fase 9 (pipeline, evenementen, herinneringen, e-mailprovider) op pauze; het portaal verstuurt
+  zelf geen e-mail. Contactadres commissie nog door Super Admin in te stellen.
+- Eerder vastgelegde ontwerpkleuren in screenshots van vorige fases wijken licht af.
 
 ## Fase 8 — Persoonlijk sponsorportaal
 
@@ -609,11 +668,11 @@ gepubliceerd of gedeployd; herstel in een nieuwe cloudtaak is niet getest.
 
 ## Open taken en volgende fase
 
-Fase 8 is lokaal geïmplementeerd. De Super Admin moet nog het echte contactadres van de
-commissie instellen. Fase 9 (Acquisitie, evenementen en notificaties) vereist een nieuwe
-opdracht en vooraf: pipelinefasen, taak- en herinneringsregels (bijv. hoeveel dagen vóór
-opzegdatum/vervaldatum), evenementdoelgroepen en capaciteit, aanmelding per bedrijf of per
-persoon en introducés, en welke e-maildienst/afzender gebruikt mag worden. Echte CRM-import blijft een aparte opdracht met proefvalidatie.
+Fases 1–8 en testgereedheid zijn lokaal afgerond; fase 9 staat op pauze. Voor testen door
+de club is een gedeelde testomgeving nodig: een hosted Supabase-project (EU-regio) en een
+Vercel-preview, met eigen SMTP voor Auth-mails, exacte redirect-URL's en de server-secret in
+omgevingsbeheer. Dat vereist een expliciete opdracht en accounts/budget van de club. Daarna:
+eerste echte Super Admin aanmaken, contactadres instellen, testaccounts per rol uitnodigen. Echte CRM-import blijft een aparte opdracht met proefvalidatie.
 Officieel logo, eerste echte Super Admin en productieconfiguratie blijven open;
 geen waarden of echte persoonsgegevens in Git opgeslagen.
 
@@ -630,3 +689,4 @@ geen waarden of echte persoonsgegevens in Git opgeslagen.
 | 2026-11-12 | 6 | Facturen incl. 21% BTW, gatenvrije F/C-nummering, termijnen uit contracten, creditnota's met verrekening, handmatige betalingen met vergrendelde toewijzing, restitutie en factuur-PDF; 470 DB-controles, 46 browsertests en echte financiële flow. | D033–D038 |
 | 2026-11-12 | 7 | Dashboard met kerncijfers en drie grafieken per seizoen, CRM-vlag betalend, bestuurstoegang en Excel-export; 513 DB-controles, 47 browsertests en echte rapportageflow. | D039–D042 |
 | 2026-11-12 | 8 | Persoonlijk sponsorportaal: overzicht, samenwerking (huidig + eerder), facturen, wijzigingsverzoeken met commissiebeoordeling, contact via e-mail, collega's uitnodigen/intrekken; 571 DB-controles, 55 browsertests en mobiele flow. | D043–D046 |
+| 2026-11-12 | 9/10 | Fase 9 op pauze. Testgereedheid: officieel logo en logokleuren, sponsor-RLS en rapportage geoptimaliseerd (tot 200× sneller), Auth één keer per verzoek, meetscript `test:perf`; alle flows op productiebuild groen. | D047–D050 |
