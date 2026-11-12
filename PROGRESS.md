@@ -6,11 +6,12 @@
 - Fase **0 — Initialisatie**: afgerond.
 - Fase **1 — Projectarchitectuur en database**: geïmplementeerd en lokaal geverifieerd.
 - Fase **2 — Design en navigatie**: afgerond en lokaal geverifieerd.
-- Volgende opdracht kan fase **3 — Authenticatie en toegangsrechten** zijn. Die is niet gestart.
-- Er werkt een technische Next.js-basis met minimale lokale database. Er is nog
-  geen functionele login, gebruikersbeheer, sponsoradministratie, Storage-bucket
-  of deployment. De startpagina meldt dit expliciet.
-- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D016. Werkinstructies:
+- Fase **3 — Authenticatie en toegangsrechten**: lokaal geïmplementeerd en geverifieerd.
+- Volgende opdracht kan fase **4 — Sponsor CRM** zijn. Die is niet gestart.
+- Er werkt een technische Next.js-basis met minimale lokale database. Er werken nu
+  login, gecontroleerde uitnodigingen en een private Storage-basis. Er is nog geen
+  volledige sponsoradministratie of deployment. De startpagina meldt dit expliciet.
+- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D021. Werkinstructies:
   [AGENTS.md](AGENTS.md). Installatie/start: [README.md](README.md).
 
 ## Fasestatus
@@ -20,7 +21,7 @@
 | 0 | Initialisatie en projectgeheugen | Afgerond |
 | 1 | Projectarchitectuur en database | Lokaal afgerond |
 | 2 | Design en navigatie | Lokaal afgerond |
-| 3 | Authenticatie en toegangsrechten | Niet gestart |
+| 3 | Authenticatie en toegangsrechten | Lokaal afgerond |
 | 4 | Sponsor CRM | Niet gestart |
 | 5 | Sponsorpakketten en contracten | Niet gestart |
 | 6 | Financieel beheer | Niet gestart |
@@ -28,6 +29,89 @@
 | 8 | Persoonlijk sponsorportaal | Niet gestart |
 | 9 | Acquisitie, evenementen en notificaties | Niet gestart |
 | 10 | Publieke sponsorwebsite en productievoorbereiding | Niet gestart |
+
+## Fase 3 — resultaat en controles
+
+- Login/logout, herstel, eenmalige uitnodigingsactivatie en wachtwoordinstelling met
+  Supabase Auth, gevalideerde serveracties en SSR-cookies. Geen openbare registratie.
+- `/account` controleert Supabase `getUser()` en actuele DB-rol/accountstatus/bedrijf.
+  Gebruikers zonder actieve toegang worden geweigerd. `/account/gebruikers` is alleen
+  voor actieve Super Admins en verstuurt echte uitnodigingen via Auth Admin.
+- Alle gewone queries, documentdownloads en roltoekenningen gebruiken het eigen JWT.
+  Een minimale server-only secretclient dient uitsluitend de gecontroleerde uitnodiging.
+  Rol/status/bedrijfstoekenning is atomair, zelfmachtiging geblokkeerd, audit met
+  voor-/natoestand afgeschermd. Commissie-uitnodigingen zijn nog fase 4.
+- Eén actieve bedrijfsbinding per sponsoraccount; meerdere gebruikers per bedrijf.
+  Alleen minimale bedrijfsidentiteiten, machtigingen en documentmetadata toegevoegd.
+- Private Storage-bucket, metadata- én object-RLS, expliciete sponsor-/bestuursvrijgave,
+  geen objectupdate/delete. Geautoriseerde downloadlinks maximaal 60 seconden.
+- MFA op verzoek optioneel. TOTP-enrollment en challenge werken; een geactiveerde
+  factor kan niet met alleen een aal1-JWT worden omzeild, ook niet via Data API.
+- Gewone authreacties zijn privé/no-store. Callbackredirects blijven op dezelfde
+  origin; Secure-cookies bij HTTPS. Next-developmentlogging van actionargumenten en
+  binnenkomende URLs uitgeschakeld om wachtwoorden/callbacktokens niet te loggen.
+
+| Controle fase 3 | Resultaat |
+| --- | --- |
+| Lint/typecheck/build | Geslaagd. |
+| Lokale SQL-lint public/private | Geen schemafouten, ook met fail-on warning. |
+| `npm test` | 7 geslaagd, 0 mislukt/overgeslagen. |
+| Nieuwe lege lokale stack | Alle migraties en 189 tests ook geslaagd in apart project VVPSponsorAuthReplay; daarna gestopt zonder volumes te wissen. |
+| `npm run db:test` | 189 geslaagd in twee pgTAP-bestanden, 0 mislukt. Vier rollen, anon, actieve/inactieve/ongebonden accounts, bedrijven/documenten/Storage, privétabellen, privilegeverhoging, machtigingsintrekking en audit. |
+| `npm run test:e2e` | 32 geslaagd, 0 mislukt/overgeslagen. Bestaande responsieve layouts plus authschermen/axe en de verplichte sessie op productie-accountingang. |
+| `npm run test:auth` met eigen devserver op 3000 | Geslaagd. Zes initiële Auth-accounts en een uitgenodigd testaccount; echte JWTs/Data API/Storage API. Twee bedrijven, eigen/andermans data, upload/download, signed URL, privilegeverhoging en directe intrekking gecontroleerd. |
+| Browserlogin/herladen/blokkade/logout | Geslaagd met echte Supabase-cookies; ingetrokken machtiging leidt naar geen-toegang. |
+| Herstel | Token geverifieerd, nieuw wachtwoord opgeslagen, hergebruik van token geweigerd. |
+| Uitnodiging | Via beschermde Super Admin-serveractie naar lokale Mailpit; echte template-link geopend, wachtwoord ingesteld en eigen bedrijf zichtbaar. Geen echte e-mailadressen of externe ontvangers gebruikt. |
+| Optionele MFA | Via UI enrolled/bevestigd, nieuwe login vereist challenge, juiste code werkt. Apart aal1-JWT houdt 0 zichtbare documenten, ook na verificatie in een andere sessie. |
+| Downloadroute | Eigen document geeft signed redirect; gewijzigd document-ID van ander bedrijf geeft 404. |
+| Testopruiming | Alleen eigen willekeurige UUID-fixtures opgeruimd; 0 achtergebleven `@auth.example`-accounts. Geen reset of bestaande gebruikersgegevens verwijderd. |
+| Git/secretcontrole | `.env.local` genegeerd; serverkey alleen lokaal. Geen echt adminaccount, remote database of deployment aangemaakt. |
+
+### Opgeloste fase-3-problemen
+
+- Eerste migratiepoging kon Storage niet vinden omdat die dienst in fase 1 uit stond.
+  De migratie werd teruggedraaid; Storage ingeschakeld en lokale diensten met behoud
+  van volumes herstart, daarna migraties en typegeneratie geslaagd.
+- De eerste browserasserties liepen tegen streaming-laadstatussen aan; controles
+  wachten nu op zichtbare hoofdinhoud. Een selectlabel is expliciet gekoppeld.
+- Herstelcookie ging aanvankelijk verloren door redirect van 127.0.0.1 naar localhost.
+  Relatieve redirects lossen dit op; beide echte herstel-/activatieflows bewezen.
+- Lokale templates werden niet opgehaald: interne GoTrue→Kong-verbinding moest de
+  externe proxy overslaan, en de als 0600 aangemaakte HTML was niet leesbaar voor
+  Kong. De Docker-wrapper behoudt bestaande proxy-uitzonderingen en voegt uitsluitend
+  de lokale Kong-host toe. Startup maakt alleen de twee statische templates 0644.
+  Geen TLS-/checksumverificatie uitgeschakeld. Auth- en Storage-healthchecks gebruiken
+  alleen op loopback `wget -Y off`.
+- Eén API-run startte te vroeg na dienstherstart en kreeg een tijdelijke uploadfout;
+  na gezonde startup slaagden upload en download. Geen test afgezwakt.
+
+### Grenzen en ingebruikname
+
+Geen volledige CRM, dashboard-, contract-, financiële of uploadmodule gebouwd.
+DB-deactivatie blokkeert gegevens direct; een volledige provider-accountban en
+sessiebeëindiging gebeuren apart via vertrouwd Supabase-beheer. De app heeft
+hiervoor geen algemene service-role-beheer-API.
+De ontwerpen op `/beheer`, `/beheer/bestuur`, `/portaal` en `/ontwerp` blijven lokaal;
+`/account` is de echte beveiligde toegang. Bestuur blijft bij minimale leesrechten.
+MFA-herstel na verlies van een authenticator vereist een vertrouwde providerbeheerder;
+geen selfservice-reset of herstelcodes. Bestandsinhoudsscan hoort bij de latere
+uploadworkflow; hier uitsluitend de private autorisatiebasis.
+
+Het eerste echte Super Admin-account is nog niet aangemaakt. Het beoogde adres is
+in de sessie ontvangen en wordt niet in deze publieke projectdocumentatie opgenomen.
+Productionele SMTP, exacte HTTPS-URLs, redirects, server-secret en beheerprocedure
+moeten vóór ingebruikname in de provider/omgeving worden ingericht. Fase 3 is lokaal
+gevalideerd; dit is geen toestemming of bewijs van productie-inrichting.
+
+Cloud-startinstructies zijn als concept bijgewerkt voor Auth/Storage, veilige lokale
+serverbinding, 7/189/32 controles en de echte integratieflow. Opslaan heeft niets
+gepubliceerd; herstel in een nieuwe cloudtaak is niet geclaimd.
+
+Er zijn drie nieuwe migraties:
+`20261112163057_auth_foundation.sql`, `20261112163614_audit_access_changes.sql`,
+`20261112163746_mfa_enforcement.sql`; daarnaast config/templates, authmodule,
+account-/authroutes, SSR/proxy, lokale helpers en echte integratiecontroles.
 
 ## Afgerond in fase 2
 
@@ -209,15 +293,12 @@ gepubliceerd of gedeployd; herstel in een nieuwe cloudtaak is niet getest.
 
 ## Open taken en volgende fase
 
-Fase 2 is afgerond; fase 3 vereist een afzonderlijke opdracht. Voor fase 3 moeten
-het eerste Super Admin-account, rolverdeling/bestuurstoegang, uitnodigings-/MFA-beleid
-en de mogelijke vertegenwoordiging van meerdere bedrijven worden afgestemd. Er is
-nog geen echte login, rolbeheer, bedrijfsmachtiging of private Storageflow.
-
-Het officiële logo met gebruiksrechten en een eventuele huisstijlgids blijven open.
-De aangeleverde kleurcodes zijn verwerkt en blokkeren geen verder werk. Geen echte
-sponsorgegevens, pakketten of productiesleutels nodig voor deze ontwerpfase.
-Er is geen deployment of remote databasewijziging uitgevoerd.
+Fase 3 is lokaal afgerond. Fase 4 (Sponsor CRM) vereist een nieuwe opdracht:
+bedrijfs-/contactvelden, statussen, archivering, eigenaarschap, duplicatenbeleid en
+beperkte commissie-uitnodigingen. Geen echte bronadministratie importeren zonder
+expliciete opdracht en proefvalidatie. Officieel logo blijft open. Eerste echte
+Super Admin en productieconfiguratie worden pas bij gecontroleerde ingebruikname
+uitgevoerd; hiervoor zijn geen waarden in Git opgeslagen.
 
 ## Logboek
 
@@ -226,3 +307,4 @@ Er is geen deployment of remote databasewijziging uitgevoerd.
 | 2026-11-12 | 0 | Drie projectdocumenten met scope, model, risico's en tienfasenplan; geen applicatie- of databasewijzigingen. Toenmalige inspectie-/documentcontrole afgerond. | D001–D010 |
 | 2026-11-12 | 1 | Technische appbasis, lokale basismigratie, RLS/grants, getypeerde clients, veilige configuratiehelpers, herhaalbare workflow en lokale controles. | D011–D013 |
 | 2026-11-12 | 2 | Clubkleuren, publieke/interne/portaallayouts, lokale ontwerpgrens, toegankelijke componenten en 25 geslaagde browsercontroles. | D014–D016 |
+| 2026-11-12 | 3 | Auth, live autorisatie, bedrijfsmachtigingen, private Storage, uitnodiging, herstel en optionele MFA lokaal geverifieerd. | D017–D021 |

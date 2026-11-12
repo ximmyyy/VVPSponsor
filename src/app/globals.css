@@ -997,9 +997,7 @@ a {
   .public-nav {
     gap: 1.2rem;
   }
-  .public-login {
-    display: none;
-  }
+
 }
 @media (max-width: 760px) {
   .public-hero {
@@ -1156,3 +1154,6 @@ a {
     transition: none !important;
   }
 }
+
+.public-login { display: inline-flex; align-items: center; min-height: 44px; }
+@media(max-width:760px){ .public-nav { display:none; } }

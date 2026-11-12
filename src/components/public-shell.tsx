@@ -37,9 +37,11 @@ export function PublicShell({
             <span className="sr-only">— nog niet beschikbaar</span>
           </span>
         </nav>
-        <Badge className="public-login">
-          <LockKeyhole className="size-3.5" aria-hidden="true" /> Inloggen volgt
-        </Badge>
+        <Link href="/inloggen" className="public-login">
+          <Badge>
+            <LockKeyhole className="size-3.5" aria-hidden="true" /> Inloggen
+          </Badge>
+        </Link>
       </header>
       <main id="inhoud" tabIndex={-1} className="public-main">
         {children}

@@ -1,8 +1,7 @@
 # VV Pernis Sponsorportaal
 
-Technische basis voor één modulaire Next.js-app met Supabase. Fases 1 en 2 zijn
-geïmplementeerd: technische basis en responsieve layouts. Login, sponsoradministratie
-en publieke sponsorinhoud volgen later.
+Technische basis voor één modulaire Next.js-app met Supabase. Fases 1–3 zijn lokaal geïmplementeerd: technische basis, layouts en authenticatie.
+Sponsoradministratie en publieke sponsorinhoud volgen later.
 Lees bij ontwikkeling eerst [PROJECT.md](PROJECT.md), [PROGRESS.md](PROGRESS.md)
 en [AGENTS.md](AGENTS.md). Gebruik de bestaande checkout; een cloudtaak is al geïsoleerd.
 
@@ -48,8 +47,8 @@ npm run dev
 
 De publieke startpagina toont de basislayout en meldt dat het portaal in ontwikkeling is. Deze pagina heeft geen
 databaseverbinding nodig; de getypeerde Supabase-clients valideren configuratie
-wanneer ze worden aangeroepen. Er is geen login- of sessie-refreshflow. De SSR-client
-is alleen een leesadapter; muterende sessie-adapters volgen in fase 3.
+wanneer ze worden aangeroepen. Login en sessieverversing zijn in fase 3 aangesloten; de gewone SSR-client gebruikt
+het eigen JWT. Alleen gecontroleerde uitnodigingen gebruiken een server-only adminclient.
 
 ## Controles
 
@@ -63,7 +62,7 @@ npm start
 ```
 
 Controleer de startpagina met een lokale HTTP-aanvraag: status 200, Nederlandstalige
-projecttitel en de melding dat inloggen nog niet beschikbaar is. `npm start` vereist
+projecttitel en de melding dat de sponsorfuncties nog in ontwikkeling zijn. `npm start` vereist
 een geslaagde build. `db:test` voert pgTAP-tests uit met transactionele fictieve
 accounts en draait alle fixtures terug. Er blijven geen testaccounts achter.
 
@@ -121,7 +120,7 @@ npm run test:e2e
 ```
 
 Dit bouwt de app en start twee eigen testservers op 3100 (development) en 3200
-(productie), waarna 25 browsercontroles draaien. Stop een eventueel al draaiende
+(productie), waarna 32 browsercontroles draaien. Stop een eventueel al draaiende
 **eigen** Next-devserver eerst: Next gebruikt één development-lock per checkout.
 De testconfig weigert bestaande servers te hergebruiken om tegen verouderde code
 geteste resultaten te vermijden. Op deze cloudmachine is `/usr/bin/chromium`
@@ -131,3 +130,64 @@ beschikbaar. Elders: `npx --no-install playwright install chromium`, of stel
 De browsercontroles dekken 360/1440 px, axe-scans, toetsenbord/menu/focus,
 statusweergaven, reduced motion en productie-afscherming. Geen volledige
 WCAG-audit of werkende loginflow. Testoutput/Playwright-traces blijven genegeerd.
+
+## Fase 3: authenticatie en toegang
+
+Echte routes: `/inloggen`, `/herstellen`, `/wachtwoord`, `/mfa` en `/account`.
+De oude ontwerpweergaven blijven lokaal: het zijn geen ingelogde modules.
+Auth werkt alleen wanneer de lokale stack is gestart en `.env.local` correct is.
+Publieke registratie staat uit. De eerste echte Super Admin is niet automatisch
+geprovisioneerd en er zijn geen blijvende testaccounts/seeds aangemaakt.
+
+Voor lokale Auth Admin-uitnodigingen kan `node scripts/local-admin-env.mjs` de
+**lokale** serverbinding veilig toevoegen aan de genegeerde `.env.local`. Dit
+controleert het doel en overschrijft geen bestaande binding. Herstart zo nodig de
+Next-server na configuratiewijzigingen. Geen keys kopiëren naar chat, Git of logs.
+Op een later hosted ontwikkelproject moet SUPABASE_SECRET_KEY veilig via de omgeving
+worden gezet. Alleen servercode voor een geautoriseerde uitnodiging leest die key.
+
+Een vertrouwde beheerder moet bij gecontroleerde ingebruikname het eerste account
+via Supabase Auth uitnodigen/aanmaken en het geverifieerde gebruikers-ID een actieve
+`super_admin`-toekenning in `private.user_access` geven. Doe dit alleen in een expliciet
+geselecteerde ontwikkelomgeving; er is geen publiek bootstrap-endpoint. Daarna
+werkt `/account/gebruikers` met de eigen geverifieerde Super Admin-sessie. Rollen,
+accountstatus en bedrijfskoppeling verlopen via de begrensde `set_user_access`-RPC,
+met audit. De beperkte sponsoruitnodiging voor commissieleden volgt bij CRM, fase 4.
+DB-deactivatie is directe data-afscherming; provider-ban en globale sessiebeëindiging
+moeten apart via vertrouwd providerbeheer worden uitgevoerd.
+
+MFA is optioneel volgens de gekozen instelling. Gebruikers kunnen een TOTP-factor
+activeren via `/account/beveiliging`. Daarna eisen login en RLS aal2. Een verloren
+factor vereist vertrouwd providerbeheer; geen selfservice-reset/herstelcodes.
+
+Private documenten krijgen expliciete metadata-vrijgave en een pad van bedrijfs-ID
+plus document-ID. Sponsors mogen geen metadata of objecten uploaden/wijzigen/wissen.
+Alleen interne rollen kunnen een object met passende metadata uploaden. De downloadroute
+`/account/documenten/[id]` gebruikt de eigen sessie/RLS en een signed URL van 60s.
+Een al uitgegeven URL blijft tot die TTL geldig; nieuwe links worden direct geweigerd
+na intrekking. Inhoudsvalidatie en de complete uploadinterface volgen bij documenten.
+
+De lokale templates gebruiken eenmalige `token_hash`-links naar `/auth/bevestigen`.
+De startuphelper maakt uitsluitend deze statische bestanden leesbaar voor Kong en
+behoudt de bestaande proxyconfiguratie met een uitzondering voor de interne Kong-host.
+In een hosted project moeten mailtemplates/SMTP en exacte HTTPS-app-/redirect-URLs
+worden ingericht. Een succesvolle lokale Mailpit-test bewijst geen productieaflevering.
+Actionargumenten en binnenkomende URLs worden in development niet gelogd vanwege
+wachtwoorden en callbacktokens. Ook externe logging moet die gegevens uitsluiten.
+
+```sh
+npm run db:start
+npm run db:migrate
+npm run db:types
+npm run dev
+# In een tweede terminal, met uitsluitend de lokale standaardstack en devserver:
+npm run test:auth
+```
+
+`test:auth` controleert echte Auth/Data/Storage-verzoeken, browserlogin/herladen,
+intrekking, uitnodiging via Mailpit, herstel, eenmalige tokens en optionele MFA.
+De test weigert een ander databasedoel, gebruikt uitsluitend willekeurige UUIDs en
+`.example`-accounts en ruimt uitsluitend eigen fixtures op. Niet parallel uitvoeren
+met zichzelf of een dienstherstart. Stop de eigen devserver vóór `test:e2e`.
+Databasebasis: 189 pgTAP-controles, Node-basis: 7 tests. De nieuwe migraties werken
+ook op een lege lokale stack. Geen reset, remote migratie of deployment nodig.

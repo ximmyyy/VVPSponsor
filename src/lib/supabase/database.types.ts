@@ -18,6 +18,40 @@ export type Database = {
                   Relationships: [
 
                   ]
+                },"documents": {
+                  Row: {
+                    "board_shared": boolean,"id": string,"object_path": string,"sponsor_id": string,"sponsor_shared": boolean,"title": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "board_shared"?: boolean,"id"?: string,"object_path": string,"sponsor_id": string,"sponsor_shared"?: boolean,"title": string
+                  }
+                  Update: {
+                    "board_shared"?: boolean,"id"?: string,"object_path"?: string,"sponsor_id"?: string,"sponsor_shared"?: boolean,"title"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "documents_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sponsors": {
+                  Row: {
+                    "created_at": string,"id": string,"name": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"name": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"name"?: string
+                  }
+                  Relationships: [
+
+                  ]
                 },"user_profiles": {
                   Row: {
                     "created_at": string,"display_name": string,"updated_at": string,"user_id": string
@@ -38,7 +72,12 @@ export type Database = {
             [_ in never]: never
           }
           Functions: {
-            [_ in never]: never
+            "get_access_context":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"set_user_access":
+{ Args: { "active": boolean,"company"?: string,"new_role": string,"target": string }; Returns: undefined
+                           }
           }
           Enums: {
             [_ in never]: never

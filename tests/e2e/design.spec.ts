@@ -7,6 +7,7 @@ for (const [route, heading] of [
   ["/beheer/bestuur", "Goed inzicht."],
   ["/portaal", "Onze club."],
   ["/ontwerp", "Helder in iedere toestand."],
+  ["/inloggen", "Inloggen"], ["/herstellen", "Wachtwoord herstellen"], ["/mfa", "Extra verificatie"],
 ]) {
   test(`${route}: responsief, toegankelijk en zonder browserfouten`, async ({
     page,

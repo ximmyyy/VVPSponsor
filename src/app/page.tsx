@@ -113,7 +113,7 @@ export default async function Home() {
         <div>
           <h2>We zijn nog aan het bouwen</h2>
           <p>
-            Inloggen en sponsorfuncties zijn nog niet beschikbaar. Er worden nog
+            Sponsorfuncties zijn nog in ontwikkeling. Uitgenodigde gebruikers kunnen inloggen. Er worden nog
             geen sponsorprofielen of sponsorpakketten gepubliceerd.
           </p>
         </div>

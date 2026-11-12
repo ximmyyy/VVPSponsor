@@ -1,9 +1,48 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { getPublicEnv } from "@/lib/env/public";
 import { isLocalDesignPreview } from "@/lib/design-preview";
 
 // Tijdelijke ontwerpgrens, geen gebruikersautorisatie. Fase 3 vervangt dit patroon
 // pas wanneer echte sessie-, rol- en databasecontroles zijn geïmplementeerd.
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  if (
+    !path.startsWith("/beheer") &&
+    !path.startsWith("/portaal") &&
+    !path.startsWith("/ontwerp")
+  ) {
+    const env = getPublicEnv();
+    let response = NextResponse.next({ request });
+    response.headers.set("Cache-Control", "private, no-store");
+    response.headers.set("Referrer-Policy", "no-referrer");
+    const client = createServerClient(
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+      {
+        cookieOptions: {
+          sameSite: "lax",
+          secure: new URL(env.NEXT_PUBLIC_APP_URL).protocol === "https:",
+        },
+        cookies: {
+          getAll: () => request.cookies.getAll(),
+          setAll: (values, cacheHeaders) => {
+            for (const { name, value } of values)
+              request.cookies.set(name, value);
+            response = NextResponse.next({ request });
+            for (const { name, value, options } of values)
+              response.cookies.set(name, value, options);
+            for (const [key, value] of Object.entries(cacheHeaders))
+              response.headers.set(key, value);
+            response.headers.set("Cache-Control", "private, no-store");
+            response.headers.set("Referrer-Policy", "no-referrer");
+          },
+        },
+      },
+    );
+    await client.auth.getUser();
+    return response;
+  }
   if (isLocalDesignPreview(process.env, request.headers.get("host")))
     return NextResponse.next();
   return new NextResponse(
@@ -18,5 +57,16 @@ export function proxy(request: NextRequest) {
   );
 }
 export const config = {
-  matcher: ["/beheer/:path*", "/portaal/:path*", "/ontwerp/:path*"],
+  matcher: [
+    "/beheer/:path*",
+    "/portaal/:path*",
+    "/ontwerp/:path*",
+    "/account/:path*",
+    "/inloggen",
+    "/herstellen",
+    "/wachtwoord",
+    "/auth/:path*",
+    "/geen-toegang",
+    "/mfa",
+  ],
 };

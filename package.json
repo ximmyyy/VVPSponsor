@@ -22,7 +22,8 @@
     "db:migrate": "SUPABASE_TELEMETRY_DISABLED=1 supabase migration up",
     "db:test": "SUPABASE_TELEMETRY_DISABLED=1 supabase test db",
     "db:types": "node scripts/database-types.mjs",
-    "test:e2e": "npm run build && playwright test"
+    "test:e2e": "npm run build && playwright test",
+    "test:auth": "node scripts/test-auth.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",

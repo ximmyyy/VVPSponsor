@@ -5,8 +5,8 @@
 Dit is de functionele en technische projectbasis voor het nieuwe sponsorportaal van VV Pernis, een Nederlandse amateurvoetbalvereniging uit Rotterdam. Opdrachtgever is lid van de sponsorcommissie.
 
 - Laatst bijgewerkt: 2026-11-12.
-- Huidige fase: **2 — Design en navigatie**, geïmplementeerd en lokaal geverifieerd. De publieke basislayout en lokale interne/portaallayouts werken; functionele auth en productmodules volgen later.
-- Volgende fase: **3 — Authenticatie en toegangsrechten**, uitsluitend na een nieuwe opdracht van de gebruiker.
+- Huidige fase: **3 — Authenticatie en toegangsrechten**, lokaal geïmplementeerd en geverifieerd. Auth, accounttoegang en private Storage-basis werken; domeinmodules volgen later.
+- Volgende fase: **4 — Sponsor CRM**, uitsluitend na een nieuwe opdracht van de gebruiker.
 - Alle onderstaande tabellen, routes, policies en processen zijn **ontwerp**, tenzij in `PROGRESS.md` expliciet als geïmplementeerd en geverifieerd vermeld.
 - `PROJECT.md` beschrijft scope, architectuur, bedrijfsregels, ontwerpkeuzes en acceptatiecriteria. `PROGRESS.md` bevat de gedetailleerde voortgang, controles, open taken en bekende problemen. `AGENTS.md` bevat blijvende werkinstructies.
 - Werk na iedere fase de faseaanduiding en belangrijke ontwerpbeslissingen hier bij; leg uitvoeringsdetails in `PROGRESS.md` vast. Ontwerp is geen bewijs van werkende functionaliteit.
@@ -57,6 +57,42 @@ heeft geen rolwisselaar of rolbeheer. Alleen het werkende overzicht heeft een li
 toekomstige modules zijn niet-interactief als 'Later' aangeduid. De lokale
 componentenbibliotheek toont laad-, fout-, lege en tabelstatussen als voorbeelden.
 De Next.js-fallbacks voor laden, fouten en niet-gevonden pagina's zijn aangesloten.
+
+### Fase 3: echte accounttoegang
+
+`/inloggen`, `/herstellen`, `/auth/bevestigen`, `/wachtwoord` en `/mfa` gebruiken
+Supabase Auth met gevalideerde serveracties, cookies en sessieverversing via de proxy.
+`/account` is de echte beschermde ingang: server-side `getUser()` plus actuele
+rol/accountstatus/bedrijfsmachtiging via een begrensde RPC. Gewone queries gebruiken
+uitsluitend de eigen sessie. Private reacties zijn `no-store`; cookies zijn Secure
+bij een HTTPS-apporigin. Geen registratiepagina: sponsoraccounts zijn invitation-only.
+De fase-2-ontwerproutes blijven lokale prototypes en worden niet als echte modules
+ontsloten. De CRM-/dashboard-/portaalmodules groeien in hun eigen fase.
+
+MFA is op verzoek **voorlopig optioneel**, ook voor interne rollen. Gebruikers kunnen
+TOTP activeren via `/account/beveiliging`. Na bevestigen eisen login én RLS `aal2`;
+een geldige wachtwoordsessie met `aal1` omzeilt een geactiveerde factor niet.
+Geen herstelcodes of selfservice-factorverwijdering geïmplementeerd; verloren factoren
+vragen een vertrouwde beheerprocedure bij Supabase. Het beoogde eerste echte
+Super Admin-account is in de sessie opgegeven, maar bewust nog niet aangemaakt.
+Bootstrap vindt pas bij gecontroleerde ingebruikname plaats; geen echt adres of
+wachtwoord wordt in de repository opgeslagen.
+
+Minimaal schema toegevoegd: `public.sponsors` (alleen ID/naam),
+`private.sponsor_memberships` (één actuele koppeling per gebruiker), private
+auditmomentopnamen en `public.documents` als private documentmetadata. Geen CRM,
+contacten, pakketten of financiën vooruitgebouwd. De gecontroleerde
+`set_user_access`-RPC vereist een actieve Super Admin, blokkeert eigen rolwijziging,
+verwerkt rol/status/bedrijf atomair en logt mutaties. Alleen Super Admin heeft in
+fase 3 een uitnodigingsscherm; commissie-uitnodigingen volgen met fase 4.
+
+Bucket `private-documents` is privé, met PDF/PNG/JPEG en maximaal 10 MiB. Interne
+rollen mogen alleen objecten met passende metadata uploaden. Sponsor leest alleen
+eigen expliciet gedeelde stukken; bestuur alleen expliciet vrijgegeven stukken.
+Update/delete van bestanden is niet toegestaan. De downloadroute controleert dezelfde
+sessie/RLS en maakt een URL van 60 seconden; reeds uitgegeven URLs blijven tot de TTL
+bruikbaar. Er is nog geen gebruikersinterface voor documentuploads of inhoudsscan;
+dat volgt bij documentmodules vóór daadwerkelijke gegevensverwerking.
 
 ## 2. Doel en productgrenzen
 
@@ -397,7 +433,9 @@ Iedere fase start met een nieuwe gebruikersopdracht en eindigt met relevante con
 **Fase 1 gebruikt alleen lokale configuratie.** `.env.example` bevat placeholders;
 `npm run env:local` maakt veilig een genegeerde `.env.local` met `APP_ENV`, app-URL,
 lokale Supabase-URL en publishable key. Bestaande bestanden worden niet overschreven.
-Geen secret/service-role-key, hosted project of productiegegevens zijn vereist.
+Voor de lokale Super Admin-uitnodiging is vanaf fase 3 een server-only lokale
+Auth Admin-binding nodig, veilig toegevoegd door `scripts/local-admin-env.mjs`.
+Geen hosted project of productiegegevens zijn vereist.
 De startpagina werkt zonder databaseconfiguratie; Supabase-clients valideren de
 configuratie bij aanroep. Overige onderstaande namen blijven toekomstig ontwerp.
 Werkelijke geheime waarden uitsluitend via veilig omgevingsbeheer; nooit in chat,
@@ -489,6 +527,12 @@ Accounts en secrets via veilige provider-/omgevingsinstellingen aanleveren, niet
 | D015 | 2026-11-12 | Vastgelegd | Interne, bestuurs-, sponsor- en componentenweergaven uitsluitend in lokale development met loopback-host en APP_ENV=local. Proxy geeft productie 404/no-store; geen vervanging voor authenticatie. Fase 3 vereist echte server-/DB-autorisatie. |
 | D016 | 2026-11-12 | Vastgelegd | shadcn/Radix-componenten, Lucide, 44px-bediening, mobiel dialoogmenu, skiplinks, semantische statussen en reduced motion. Alleen werkende routes activeren; toekomstige modules niet aanklikbaar. Chromium/axe-browsercontroles vastgelegd met productie-afscherming. |
 
+| D017 | 2026-11-12 | Vastgelegd | Echte accountingang `/account` met geverifieerde Supabase-identiteit en live DB-autorisatie; lokale fase-2-prototypes blijven afgesloten in productie. |
+| D018 | 2026-11-12 | Vastgelegd op gebruikersverzoek | MFA voorlopig optioneel. TOTP kan worden geactiveerd; daarna is aal2 verplicht in de database en de loginflow. Eerste echte Super Admin later bij gecontroleerde ingebruikname. |
+| D019 | 2026-11-12 | Vastgelegd | Minimale bedrijven/machtigingen/documentmetadata voor beveiligingsbasis; private bucket, expliciete vrijgave, maximaal 60s-downloadlinks, geen overwrite/delete. CRM en volledige documentworkflow later. |
+| D020 | 2026-11-12 | Vastgelegd | Alleen Super Admin nodigt nu gebruikers uit; server-only Auth Admin-client uitsluitend voor dit begrensde proces. Gewone queries/roltoekenning met eigen JWT, audit en atomair DB-proces. Commissie-uitnodigingen volgen in fase 4. |
+| D021 | 2026-11-12 | Vastgelegd | Eenvoudige authformulieren gebruiken Next Server Actions/useActionState en server-side Zod. Geen actionargument-/callbacklogging; relatieve callbackredirects bewaren de cookie-origin. Lokale mailtemplates zijn leesbaar voor Kong; interne templatehosts gaan rechtstreeks via Docker, externe proxy/TLS blijven intact. |
+
 ### Bronnen voor latere technische verificatie
 
 Bij initialisatie zijn de Supabase-skills en actuele documentatie over tabellen/viewbeveiliging en private/public Storage-buckets geraadpleegd, plus de changelog. Dit is ontwerpverificatie, geen test van een projectdatabase. Controleer versies en documentatie opnieuw bij daadwerkelijke implementatie.
@@ -507,10 +551,10 @@ Initialisatie is compleet wanneer de drie documenten in de projecthoofdmap staan
 
 Fase 1 is lokaal geverifieerd: installatie via lockfile, lint, typecheck, vijf
 Node-tests, productiebuild, 117 pgTAP-controles, lokale SQL-lint en HTTP-controles.
-De basismigratie en tests werken ook op een tweede lege lokale stack. Er is geen
+De basismigratie en tests werken ook op een tweede lege lokale stack. Na fase 1 was er nog geen
 productieomgeving, werkende login of volledige applicatiemodule. Fase 2 is eveneens geverifieerd: lint/typecheck/build, zes Node-tests en 25
 Chromium-browsercontroles, inclusief axe-scans op 360/1440 px, toetsenbordbediening,
 reduced motion en blokkade van productie-previewroutes. Dit is geen volledige
 WCAG-audit. De echte login, serverautorisatie, bedrijfsmachtigingen en Storage
-blijven fase 3; die fase is nog niet gestart. De exacte resultaten en beperkingen
+zijn in fase 3 lokaal geïmplementeerd. Er zijn 189 databasecontroles, 32 browsercontroles en aanvullende echte Auth/Data/Storage- en mail/MFA-integratiecontroles uitgevoerd; productie-inrichting is niet uitgevoerd. De exacte resultaten en beperkingen
 staan in `PROGRESS.md`.

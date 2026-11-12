@@ -8,7 +8,7 @@ test("productie toont de publieke layout zonder lokale ontwerplinks", async ({
     "Samen maken we",
   );
   await expect(
-    page.getByText("Inloggen en sponsorfuncties zijn nog niet beschikbaar.", {
+    page.getByText("Sponsorfuncties zijn nog in ontwikkeling.", {
       exact: false,
     }),
   ).toBeVisible();
@@ -45,4 +45,11 @@ test("onbekende publieke pagina toont een werkende terugweg", async ({
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "Samen maken we",
   );
+});
+
+test("private account vereist een sessie en login is beschikbaar", async ({ page }) => {
+  await page.goto("/account");
+  await expect(page).toHaveURL(/\/inloggen$/);
+  await expect(page.getByRole("heading", { name: "Inloggen", exact: true })).toBeVisible();
+  await expect(page.getByLabel("E-mailadres", { exact: true })).toBeVisible();
 });
