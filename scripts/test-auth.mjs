@@ -104,15 +104,13 @@ try {
     clients.push(client);
   }
   for (let i = 0; i < 2; i++) {
-    const result = await clients[1]
-      .from("documents")
-      .insert({
-        id: docIds[i],
-        sponsor_id: companies[i],
-        object_path: paths[i],
-        title: "TEST — Bewijs",
-        sponsor_shared: true,
-      });
+    const result = await clients[1].from("documents").insert({
+      id: docIds[i],
+      sponsor_id: companies[i],
+      object_path: paths[i],
+      title: "TEST — Bewijs",
+      sponsor_shared: true,
+    });
     assert.equal(result.error, null, "interne documentmetadata");
     const upload = await clients[1].storage
       .from("private-documents")
@@ -364,7 +362,7 @@ try {
   const ids = users.map((u) => `'${u.id}'`).join(",");
   if (ids)
     sql(
-      `delete from public.documents where sponsor_id in ('${companies.join("','")}');delete from private.access_audit where target in (${ids}) or actor in (${ids});delete from private.sponsor_memberships where user_id in (${ids});delete from private.user_access where user_id in (${ids});delete from public.sponsors where id in ('${companies.join("','")}');`,
+      `delete from public.documents where sponsor_id in ('${companies.join("','")}');delete from private.access_audit where target in (${ids}) or actor in (${ids});delete from private.sponsor_memberships where user_id in (${ids});delete from private.user_access where user_id in (${ids});delete from private.crm_audit where sponsor_id in ('${companies.join("','")}');delete from public.sponsor_internal where sponsor_id in ('${companies.join("','")}');delete from public.sponsors where id in ('${companies.join("','")}');`,
     );
   for (const u of users) await admin.auth.admin.deleteUser(u.id);
 }

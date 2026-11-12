@@ -37,8 +37,6 @@ select is((select count(*)::int from storage.objects where bucket_id='private-do
 select throws_ok('select * from private.sponsor_memberships','42501',null,'geen directe beheertoegang');
 select throws_ok('select * from private.user_access','42501',null,'geen directe beheertoegang');
 select throws_ok('select * from private.access_audit','42501',null,'geen directe beheertoegang');
-select throws_ok($q$insert into public.sponsors(name) values('TEST')$q$,'42501',null,'geen CRM insert in fase 3');
-select throws_ok($q$update public.sponsors set name='TEST'$q$,'42501',null,'geen CRM update in fase 3');
 select throws_ok($q$delete from public.sponsors$q$,'42501',null,'geen CRM delete in fase 3');
 reset role;
 set local role authenticated;
@@ -50,8 +48,6 @@ select throws_ok('select * from private.sponsor_memberships','42501',null,'geen 
 select throws_ok('select * from private.user_access','42501',null,'geen directe beheertoegang');
 select throws_ok('select * from private.access_audit','42501',null,'geen directe beheertoegang');
 select throws_ok($q$select public.set_user_access('10000000-0000-0000-0000-000000000007','super_admin',true,null)$q$,'42501',null,'geen privilegeverhoging via RPC');
-select throws_ok($q$insert into public.sponsors(name) values('TEST')$q$,'42501',null,'geen CRM insert in fase 3');
-select throws_ok($q$update public.sponsors set name='TEST'$q$,'42501',null,'geen CRM update in fase 3');
 select throws_ok($q$delete from public.sponsors$q$,'42501',null,'geen CRM delete in fase 3');
 reset role;
 set local role authenticated;
@@ -64,7 +60,7 @@ select throws_ok('select * from private.user_access','42501',null,'geen directe 
 select throws_ok('select * from private.access_audit','42501',null,'geen directe beheertoegang');
 select throws_ok($q$select public.set_user_access('10000000-0000-0000-0000-000000000007','super_admin',true,null)$q$,'42501',null,'geen privilegeverhoging via RPC');
 select throws_ok($q$insert into public.sponsors(name) values('TEST')$q$,'42501',null,'geen CRM insert in fase 3');
-select throws_ok($q$update public.sponsors set name='TEST'$q$,'42501',null,'geen CRM update in fase 3');
+with changed as (update public.sponsors set name='TEST' returning id) select is((select count(*)::int from changed),0,'RLS blokkeert CRM-wijzigingen voor niet-interne rollen');
 select throws_ok($q$delete from public.sponsors$q$,'42501',null,'geen CRM delete in fase 3');
 reset role;
 set local role authenticated;
@@ -77,7 +73,7 @@ select throws_ok('select * from private.user_access','42501',null,'geen directe 
 select throws_ok('select * from private.access_audit','42501',null,'geen directe beheertoegang');
 select throws_ok($q$select public.set_user_access('10000000-0000-0000-0000-000000000007','super_admin',true,null)$q$,'42501',null,'geen privilegeverhoging via RPC');
 select throws_ok($q$insert into public.sponsors(name) values('TEST')$q$,'42501',null,'geen CRM insert in fase 3');
-select throws_ok($q$update public.sponsors set name='TEST'$q$,'42501',null,'geen CRM update in fase 3');
+with changed as (update public.sponsors set name='TEST' returning id) select is((select count(*)::int from changed),0,'RLS blokkeert CRM-wijzigingen voor niet-interne rollen');
 select throws_ok($q$delete from public.sponsors$q$,'42501',null,'geen CRM delete in fase 3');
 reset role;
 set local role authenticated;
@@ -90,7 +86,7 @@ select throws_ok('select * from private.user_access','42501',null,'geen directe 
 select throws_ok('select * from private.access_audit','42501',null,'geen directe beheertoegang');
 select throws_ok($q$select public.set_user_access('10000000-0000-0000-0000-000000000007','super_admin',true,null)$q$,'42501',null,'geen privilegeverhoging via RPC');
 select throws_ok($q$insert into public.sponsors(name) values('TEST')$q$,'42501',null,'geen CRM insert in fase 3');
-select throws_ok($q$update public.sponsors set name='TEST'$q$,'42501',null,'geen CRM update in fase 3');
+with changed as (update public.sponsors set name='TEST' returning id) select is((select count(*)::int from changed),0,'RLS blokkeert CRM-wijzigingen voor niet-interne rollen');
 select throws_ok($q$delete from public.sponsors$q$,'42501',null,'geen CRM delete in fase 3');
 reset role;
 set local role authenticated;
@@ -103,7 +99,7 @@ select throws_ok('select * from private.user_access','42501',null,'geen directe 
 select throws_ok('select * from private.access_audit','42501',null,'geen directe beheertoegang');
 select throws_ok($q$select public.set_user_access('10000000-0000-0000-0000-000000000007','super_admin',true,null)$q$,'42501',null,'geen privilegeverhoging via RPC');
 select throws_ok($q$insert into public.sponsors(name) values('TEST')$q$,'42501',null,'geen CRM insert in fase 3');
-select throws_ok($q$update public.sponsors set name='TEST'$q$,'42501',null,'geen CRM update in fase 3');
+with changed as (update public.sponsors set name='TEST' returning id) select is((select count(*)::int from changed),0,'RLS blokkeert CRM-wijzigingen voor niet-interne rollen');
 select throws_ok($q$delete from public.sponsors$q$,'42501',null,'geen CRM delete in fase 3');
 reset role;
 set local role authenticated;
@@ -116,7 +112,7 @@ select throws_ok('select * from private.user_access','42501',null,'geen directe 
 select throws_ok('select * from private.access_audit','42501',null,'geen directe beheertoegang');
 select throws_ok($q$select public.set_user_access('10000000-0000-0000-0000-000000000007','super_admin',true,null)$q$,'42501',null,'geen privilegeverhoging via RPC');
 select throws_ok($q$insert into public.sponsors(name) values('TEST')$q$,'42501',null,'geen CRM insert in fase 3');
-select throws_ok($q$update public.sponsors set name='TEST'$q$,'42501',null,'geen CRM update in fase 3');
+with changed as (update public.sponsors set name='TEST' returning id) select is((select count(*)::int from changed),0,'RLS blokkeert CRM-wijzigingen voor niet-interne rollen');
 select throws_ok($q$delete from public.sponsors$q$,'42501',null,'geen CRM delete in fase 3');
 reset role;
 update private.sponsor_memberships set is_active=false where user_id='10000000-0000-0000-0000-000000000004';

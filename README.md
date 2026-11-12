@@ -1,7 +1,7 @@
 # VV Pernis Sponsorportaal
 
-Technische basis voor één modulaire Next.js-app met Supabase. Fases 1–3 zijn lokaal geïmplementeerd: technische basis, layouts en authenticatie.
-Sponsoradministratie en publieke sponsorinhoud volgen later.
+Technische basis voor één modulaire Next.js-app met Supabase. Fases 1–4 zijn lokaal geïmplementeerd: technische basis, layouts, authenticatie en
+sponsor-CRM. Pakketten, contracten, financiën en publieke sponsorinhoud volgen later.
 Lees bij ontwikkeling eerst [PROJECT.md](PROJECT.md), [PROGRESS.md](PROGRESS.md)
 en [AGENTS.md](AGENTS.md). Gebruik de bestaande checkout; een cloudtaak is al geïsoleerd.
 
@@ -191,3 +191,43 @@ De test weigert een ander databasedoel, gebruikt uitsluitend willekeurige UUIDs 
 met zichzelf of een dienstherstart. Stop de eigen devserver vóór `test:e2e`.
 Databasebasis: 189 pgTAP-controles, Node-basis: 7 tests. De nieuwe migraties werken
 ook op een lege lokale stack. Geen reset, remote migratie of deployment nodig.
+
+## Fase 4: Sponsor CRM
+
+Na login krijgen Super Admin en Sponsorcommissie op `/account` de link **Sponsors
+beheren**. De echte routes staan onder `/account/sponsors`; de oude `/beheer`-routes
+blijven lokale ontwerpprototypes. De CRM-pagina's en acties doen steeds een eigen
+servercontrole, naast RLS. Bestuur en sponsoren krijgen geen intern dossier.
+
+Het CRM bevat bedrijfsprofiel, interne administratie, verantwoordelijke, meerdere
+contacten en bedrijfsmachtigingen. Naam is verplicht; overige zakelijke velden zijn
+optioneel. Prospect/actief/inactief is een relatiestatus, geen account- of contractstatus.
+Interne velden en contacten zijn voor sponsor/bestuur afgeschermd in aparte tabellen.
+Zoeken gebruikt bedrijfsnaam; filter op status/archief, 25 resultaten per pagina.
+
+Zoek ook in het archief vóór toevoegen. Genormaliseerde bedrijfsnaam en ingevuld
+KvK-nummer (8 cijfers) zijn uniek. Omzetting van prospect naar actief gebeurt via
+bewerken van hetzelfde record. Geen import, automatische merge of registervalidatie.
+Archiveren bewaart alle gegevens en bestaande rechten. Toegang intrekken gebeurt
+apart via de machtigingssectie. Nieuwe contacten/uitnodigingen vereisen een actief
+bedrijf. Contactpersoon ≠ account: opslaan maakt nooit automatisch een login aan.
+
+Een commissie-uitnodiging gebruikt uitsluitend een gekozen actief contact met
+email, maakt alleen de Sponsorrol en dezelfde bedrijfsmachtiging aan en kan geen
+bestaande interne rol of andere bedrijfsbinding overschrijven. De eerdere Super
+Admin-uitnodigingen blijven beschikbaar. Voor verzending is de bestaande server-
+binding nodig; lokaal `scripts/local-admin-env.mjs`, zoals beschreven bij fase 3.
+
+```sh
+npm run db:migrate
+npm run db:types
+npm run db:test
+npm run dev
+# Tweede terminal; niet parallel met test:auth of dienstherstarts:
+npm run test:crm
+```
+
+De CRM-integratieflow gebruikt echte lokale JWTs, browserformulieren, Data API en
+een uitnodiging naar Mailpit. Zij ruimt uitsluitend eigen UUID/.example-fixtures op.
+Bestaande authregressies: `npm run test:auth`. Stop daarna de eigen Next-devserver
+voor `npm run test:e2e`. Geen productiegegevens of automatische seeds nodig.

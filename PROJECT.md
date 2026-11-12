@@ -5,8 +5,8 @@
 Dit is de functionele en technische projectbasis voor het nieuwe sponsorportaal van VV Pernis, een Nederlandse amateurvoetbalvereniging uit Rotterdam. Opdrachtgever is lid van de sponsorcommissie.
 
 - Laatst bijgewerkt: 2026-11-12.
-- Huidige fase: **3 — Authenticatie en toegangsrechten**, lokaal geïmplementeerd en geverifieerd. Auth, accounttoegang en private Storage-basis werken; domeinmodules volgen later.
-- Volgende fase: **4 — Sponsor CRM**, uitsluitend na een nieuwe opdracht van de gebruiker.
+- Huidige fase: **4 — Sponsor CRM**, lokaal geïmplementeerd en geverifieerd. Bedrijven, contacten, interne gegevens, filters, archief en beperkte commissie-uitnodigingen werken.
+- Volgende fase: **5 — Sponsorpakketten en contracten**, uitsluitend na een nieuwe opdracht van de gebruiker.
 - Alle onderstaande tabellen, routes, policies en processen zijn **ontwerp**, tenzij in `PROGRESS.md` expliciet als geïmplementeerd en geverifieerd vermeld.
 - `PROJECT.md` beschrijft scope, architectuur, bedrijfsregels, ontwerpkeuzes en acceptatiecriteria. `PROGRESS.md` bevat de gedetailleerde voortgang, controles, open taken en bekende problemen. `AGENTS.md` bevat blijvende werkinstructies.
 - Werk na iedere fase de faseaanduiding en belangrijke ontwerpbeslissingen hier bij; leg uitvoeringsdetails in `PROGRESS.md` vast. Ontwerp is geen bewijs van werkende functionaliteit.
@@ -93,6 +93,53 @@ Update/delete van bestanden is niet toegestaan. De downloadroute controleert dez
 sessie/RLS en maakt een URL van 60 seconden; reeds uitgegeven URLs blijven tot de TTL
 bruikbaar. Er is nog geen gebruikersinterface voor documentuploads of inhoudsscan;
 dat volgt bij documentmodules vóór daadwerkelijke gegevensverwerking.
+
+### Fase 4: Sponsor CRM
+
+Het echte CRM staat onder `/account/sponsors`, met lijst, dossier, aanmaken,
+bewerken en contactformulieren. Alleen actieve Super Admins en commissieleden mogen
+hier komen; iedere pagina en servermutatie controleert dit zelfstandig. Bestuur
+heeft voorlopig uitsluitend de bestaande veilige Data API-leesvelden; sponsoren
+alleen hun eigen profielvelden. Er is geen publiek CRM en geen automatische publicatie.
+
+`public.sponsors` blijft de enige bedrijfsidentiteit, met naam, handelsnaam, website,
+plaats, timestamps en archiefstatus. `public.sponsor_internal` is via RLS uitsluitend
+intern leesbaar: relatiestatus, KvK, BTW, straat/postcode, zakelijk e-mailadres,
+telefoon, eigenaar en notities. RLS op de bedrijfsrij alleen zou deze velden niet
+kunnen afschermen; daarom staan ze apart. `public.sponsor_contacts` bevat meerdere
+contactpersonen per bedrijf, zonder automatische accountaanmaak.
+
+Voorlopige conventies: bedrijfsnaam verplicht; zakelijke velden optioneel;
+relatiestatus prospect/actief/inactief, los van archiveren. Naam is uniek na trimmen,
+witruimtenormalisatie en casefolding; ingevuld KvK-nummer is uniek en telt acht
+cijfers. Gearchiveerde bedrijven blijven onderdeel van deze controle: herstel het
+bestaande record. Een prospect wordt op hetzelfde ID actief. Geen automatische
+samenvoeging, import of KvK-/BTW-registerkoppeling. Geldige bedrijven met dezelfde
+naam moeten een onderscheidende bedrijfsnaam krijgen; dit beleid kan na beoordeling
+van de echte bronadministratie gericht worden aangepast.
+
+Een verantwoordelijke is een actief intern account. Er is maximaal één actief
+primair contact per bedrijf; wijzigen via de contact-RPC vergrendelt de bedrijfsrij
+zodat de wissel atomair gebeurt. Contacten kunnen niet naar een ander bedrijf worden
+herlinkt. Archiveren verwijdert niets en trekt bestaande gebruikersrechten niet
+automatisch in. Toegang intrekken is een aparte bevestigde handeling; nieuwe
+uitnodigingen en contactmutaties zijn bij een gearchiveerd bedrijf geblokkeerd.
+
+De commissie kan uitsluitend een gekozen actief contact met e-mail uitnodigen als
+Sponsor voor datzelfde niet-gearchiveerde bedrijf. De begrensde RPC verifieert rol,
+bestaande koppeling, contact/bedrijf en provider-identiteit, onder een gebruikerslock.
+Geen vrije rolkeuze, zelfmachtiging, overschrijven van interne rollen of herkoppelen
+naar een ander bedrijf. Super Admin behoudt expliciet algemeen rolbeheer uit fase 3;
+bij een bewuste bedrijfsovergang wordt een oude contactreferentie niet meegenomen.
+Uitnodigingen gebruiken alleen voor Auth de bestaande server-only adminclient;
+alle CRM-queries en transacties gebruiken het eigen JWT. Intrekking wordt direct door
+RLS afgedwongen. Een losse contactpersoon is nooit automatisch een loginaccount.
+
+CRM-mutaties krijgen een private audit met actor, entiteit, bedrijf, operatie en
+tijdstip, zonder kopieën van vrije notities. Bewaartermijnen volgen vóór echte
+gegevensverwerking. Formulieren gebruiken React Hook Form en server-side herhaalde
+Zod-validatie; beide bedrijfsdelen worden in één DB-transactie opgeslagen. De lijst
+zoekt op bedrijfsnaam, filtert status/archief en toont 25 bedrijven per pagina.
 
 ## 2. Doel en productgrenzen
 
@@ -291,8 +338,8 @@ De businesslogica hangt niet van webpagina's af. Voor een toekomstige Capacitor-
 | `club_settings` | singleton, clubnaam, branding, goedgekeurd logo, locale, timezone | Alleen niet-geheime clubconfiguratie; beheer door Super Admin. Publiek uitsluitend veilige brandingvelden. |
 | `user_profiles` | `user_id` → `auth.users`, weergavenaam, voorkeuren | Eigen profielgegevens; rol en bedrijf niet door gebruiker wijzigbaar. |
 | `private.user_access` | `user_id` → `auth.users`, `role`, `is_active` | Afgeschermde autorisatiebron met één van vier rollen; geen publieke gebruikerslijst. |
-| `sponsors` | naam, handelsnaam, KvK/BTW indien nodig, zakelijke adressen, website, relatiestatus, `archived_at` | Eén bedrijfsrecord voor prospect én sponsor; geen dubbel bedrijf na conversie. Statussen ontwerpen in fase 4. Geen interne notities in sponsorleesbare velden. |
-| `sponsor_internal` | `sponsor_id` → `sponsors`, commissie-eigenaar, interne notities | Afgeschermde interne bedrijfsinformatie. |
+| `sponsors` | naam, handelsnaam, website, plaats, timestamps, `archived_at` | Enige bedrijfsidentiteit; veilige profielvelden, dezelfde ID bij prospectconversie. Naam genormaliseerd uniek. |
+| `sponsor_internal` | `sponsor_id` → `sponsors`, relatiestatus, KvK/BTW, straat/postcode, zakelijke e-mail/telefoon, eigenaar, notities | Alleen Super Admin/commissie; ingevulde KvK uniek, eigenaar actief intern account. |
 | `sponsor_contacts` | `sponsor_id`, naam, functie, zakelijke e-mail/telefoon, primair-contactindicatie | Bedrijf 1:N contactpersonen; maximaal één primair contact via constraint. Geen verplichte login. |
 | `sponsor_memberships` | `sponsor_id`, `user_id`, status, geactiveerd/ingetrokken op | Bedrijf 1:N gemachtigde gebruikers. Voorlopig maximaal één actieve bedrijfskoppeling per sponsoraccount; consistent met `user_access`. |
 | `sponsor_invitations` | `sponsor_id`, e-mail, eventuele contactverwijzing, tokenhash/providerreferentie, vervaltijd, gebruikt/ingetrokken op | Geen plaintext uitnodigingstokens opslaan. Activatie koppelt geverifieerde identiteit en bedrijf atomair; contactrelatie binnen hetzelfde bedrijf. |
@@ -495,7 +542,7 @@ Deze punten blokkeren de initialisatie niet. Vraag ze op bij de relevante fase; 
 | Fase 1 | Gewenste Git-repository/eigenaarschap, packagebeheer indien voorkeur, beschikbare ontwikkelomgeving, verantwoordelijke voor Supabase/Vercel en eventueel budget/regio. Alleen lokale/testinrichting binnen de nieuwe opdracht. |
 | Fase 2 | Blauw `#125B9E` en oranje `#E67522` ontvangen. Officieel logo met gebruiksrechten en eventuele huisstijlgids blijven open; blokkeren de layoutbasis niet. |
 | Fase 3 | Wie wordt eerste Super Admin, interne gebruikers/rollen, authenticatievoorkeur, MFA-/uitnodigingsbeleid, definitieve bestuurstoegang; mag één persoon meerdere sponsorbedrijven vertegenwoordigen? |
-| Fase 4 | Bestaande bronadministratie en importwens, verplichte bedrijfs-/contactvelden, CRM-statussen, eigenaarschap en duplicaatbeleid. Eerst veilige import met proef/validatie ontwerpen. |
+| Fase 4 | Voorlopige velden/statussen en duplicaatbeleid geïmplementeerd; echte bronadministratie/import niet aangeleverd of uitgevoerd. Wijzigingen in velden/duplicaatbeleid eerst beoordelen; import alleen na aparte opdracht en proefvalidatie. |
 | Fase 5 | Echte pakketten, prijzen, rechten, looptijden, voorwaarden, contract-/verleng-/opzegproces, bestaande contracttemplates, wie uitvoering goedkeurt en welk bewijs sponsoren mogen zien. |
 | Fase 6 | BTW-regels, prijzen inclusief/exclusief BTW, factuur-/creditnummering, betalingstermijnen, termijnen, seizoen/boekjaar, bestaande facturatiesoftware, correcties/restituties, wie betalingen vastlegt en welke bestuursoverzichten nodig zijn. |
 | Fase 7 | Gewenste KPI's, definitie actieve sponsor, periode-/seizoenfilters, rapportages en exportformaten. |
@@ -533,6 +580,12 @@ Accounts en secrets via veilige provider-/omgevingsinstellingen aanleveren, niet
 | D020 | 2026-11-12 | Vastgelegd | Alleen Super Admin nodigt nu gebruikers uit; server-only Auth Admin-client uitsluitend voor dit begrensde proces. Gewone queries/roltoekenning met eigen JWT, audit en atomair DB-proces. Commissie-uitnodigingen volgen in fase 4. |
 | D021 | 2026-11-12 | Vastgelegd | Eenvoudige authformulieren gebruiken Next Server Actions/useActionState en server-side Zod. Geen actionargument-/callbacklogging; relatieve callbackredirects bewaren de cookie-origin. Lokale mailtemplates zijn leesbaar voor Kong; interne templatehosts gaan rechtstreeks via Docker, externe proxy/TLS blijven intact. |
 
+| D022 | 2026-11-12 | Voorlopig | Bedrijfsnaam verplicht, overige zakelijke gegevens optioneel; prospect/actief/inactief los van archief. Genormaliseerde bedrijfsnaam en ingevuld KvK-nummer uniek. Prospectconversie behoudt bedrijfs-ID; geen automatische import/merge. |
+| D023 | 2026-11-12 | Vastgelegd | Publieke bedrijfsrij bevat alleen veilige profielvelden. Interne administratie en contactpersonen in aparte RLS-tabellen, niet leesbaar voor sponsor/bestuur. Alleen bevoegde interne rollen krijgen het CRM. |
+| D024 | 2026-11-12 | Vastgelegd | Meerdere contacten, maximaal één actief primair contact per bedrijf; wisselen atomair onder bedrijfslock. Contactpersoon ≠ account. Geen definitieve verwijdering; archiveren behoudt data en bestaande machtigingen. |
+| D025 | 2026-11-12 | Vastgelegd | Commissie-uitnodiging via actief contact: uitsluitend sponsorrol voor hetzelfde bedrijf, provider-emailmatch en vergrendelde accountkoppeling. Geen interne roloverschrijving of bedrijfsovergang. Intrekken apart en direct effectief. |
+| D026 | 2026-11-12 | Vastgelegd | React Hook Form/Zod aan client en server, DB-constraints en transactionele RPCs. Private minimale CRM-audit zonder vrije notities; 25 resultaten per pagina. Geen gewone CRM-queries met secretclient. |
+
 ### Bronnen voor latere technische verificatie
 
 Bij initialisatie zijn de Supabase-skills en actuele documentatie over tabellen/viewbeveiliging en private/public Storage-buckets geraadpleegd, plus de changelog. Dit is ontwerpverificatie, geen test van een projectdatabase. Controleer versies en documentatie opnieuw bij daadwerkelijke implementatie.
@@ -558,3 +611,8 @@ reduced motion en blokkade van productie-previewroutes. Dit is geen volledige
 WCAG-audit. De echte login, serverautorisatie, bedrijfsmachtigingen en Storage
 zijn in fase 3 lokaal geïmplementeerd. Er zijn 189 databasecontroles, 32 browsercontroles en aanvullende echte Auth/Data/Storage- en mail/MFA-integratiecontroles uitgevoerd; productie-inrichting is niet uitgevoerd. De exacte resultaten en beperkingen
 staan in `PROGRESS.md`.
+
+Fase 4 is lokaal geverifieerd met 10 Node-tests, 279 databasecontroles, 35
+browserregressies en de echte CRM-/authintegratieflows. Het volledige schema en
+dezelfde databasecontroles werken op een nieuwe lege lokale stack. Er is geen
+productie-inrichting of echte gegevensimport uitgevoerd. Fase 5 is niet gestart.

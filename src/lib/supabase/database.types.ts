@@ -38,16 +38,56 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"sponsors": {
+                },"sponsor_contacts": {
                   Row: {
-                    "created_at": string,"id": string,"name": string
+                    "archived_at": string | null,"created_at": string,"email": string | null,"id": string,"is_primary": boolean,"name": string,"phone": string | null,"position": string | null,"sponsor_id": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"name": string
+                    "archived_at"?: string | null,"created_at"?: string,"email"?: string | null,"id"?: string,"is_primary"?: boolean,"name": string,"phone"?: string | null,"position"?: string | null,"sponsor_id": string,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"name"?: string
+                    "archived_at"?: string | null,"created_at"?: string,"email"?: string | null,"id"?: string,"is_primary"?: boolean,"name"?: string,"phone"?: string | null,"position"?: string | null,"sponsor_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sponsor_contacts_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sponsor_internal": {
+                  Row: {
+                    "email": string | null,"kvk": string | null,"notes": string | null,"owner_id": string | null,"phone": string | null,"postal_code": string | null,"sponsor_id": string,"status": string,"street": string | null,"updated_at": string,"vat_number": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "email"?: string | null,"kvk"?: string | null,"notes"?: string | null,"owner_id"?: string | null,"phone"?: string | null,"postal_code"?: string | null,"sponsor_id": string,"status"?: string,"street"?: string | null,"updated_at"?: string,"vat_number"?: string | null
+                  }
+                  Update: {
+                    "email"?: string | null,"kvk"?: string | null,"notes"?: string | null,"owner_id"?: string | null,"phone"?: string | null,"postal_code"?: string | null,"sponsor_id"?: string,"status"?: string,"street"?: string | null,"updated_at"?: string,"vat_number"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sponsor_internal_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: true
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sponsors": {
+                  Row: {
+                    "archived_at": string | null,"city": string | null,"created_at": string,"id": string,"name": string,"trading_name": string | null,"updated_at": string,"website": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived_at"?: string | null,"city"?: string | null,"created_at"?: string,"id"?: string,"name": string,"trading_name"?: string | null,"updated_at"?: string,"website"?: string | null
+                  }
+                  Update: {
+                    "archived_at"?: string | null,"city"?: string | null,"created_at"?: string,"id"?: string,"name"?: string,"trading_name"?: string | null,"updated_at"?: string,"website"?: string | null
                   }
                   Relationships: [
 
@@ -72,11 +112,30 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "get_access_context":
+            "crm_owners":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "label": string,"user_id": string
+            }[]
+                           },
+"get_access_context":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"manage_sponsor_member":
+{ Args: { "active": boolean,"company": string,"contact": string,"target": string }; Returns: undefined
+                           },
+"save_sponsor":
+{ Args: { "details": Json,"target": string }; Returns: string
+                           },
+"save_sponsor_contact":
+{ Args: { "company": string,"details": Json,"target": string }; Returns: string
                            },
 "set_user_access":
 { Args: { "active": boolean,"company"?: string,"new_role": string,"target": string }; Returns: undefined
+                           },
+"sponsor_members":
+{ Args: { "company": string }; Returns: {
+              "is_active": boolean,"label": string,"user_id": string
+            }[]
                            }
           }
           Enums: {

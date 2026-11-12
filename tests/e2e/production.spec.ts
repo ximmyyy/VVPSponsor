@@ -47,9 +47,27 @@ test("onbekende publieke pagina toont een werkende terugweg", async ({
   );
 });
 
-test("private account vereist een sessie en login is beschikbaar", async ({ page }) => {
+test("private account vereist een sessie en login is beschikbaar", async ({
+  page,
+}) => {
   await page.goto("/account");
   await expect(page).toHaveURL(/\/inloggen$/);
-  await expect(page.getByRole("heading", { name: "Inloggen", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Inloggen", exact: true }),
+  ).toBeVisible();
   await expect(page.getByLabel("E-mailadres", { exact: true })).toBeVisible();
 });
+
+for (const route of [
+  "/account/sponsors",
+  "/account/sponsors/nieuw",
+  "/account/sponsors/50000000-0000-0000-0000-000000000001",
+]) {
+  test(`CRM vereist een sessie: ${route}`, async ({ page }) => {
+    await page.goto(route);
+    await expect(page).toHaveURL(/\/inloggen$/);
+    await expect(
+      page.getByRole("heading", { name: "Inloggen", exact: true }),
+    ).toBeVisible();
+  });
+}

@@ -33,6 +33,11 @@ export default async function Account() {
             Bedrijf: {company.name}
           </p>
         ))}
+        {["super_admin", "sponsorcommissie"].includes(access.role) && (
+          <Link href="/account/sponsors" className="my-6 block underline">
+            Sponsors beheren
+          </Link>
+        )}
         <p className="my-6">
           De functionele sponsormodules volgen in latere fases.
         </p>

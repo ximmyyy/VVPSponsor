@@ -7,11 +7,12 @@
 - Fase **1 — Projectarchitectuur en database**: geïmplementeerd en lokaal geverifieerd.
 - Fase **2 — Design en navigatie**: afgerond en lokaal geverifieerd.
 - Fase **3 — Authenticatie en toegangsrechten**: lokaal geïmplementeerd en geverifieerd.
-- Volgende opdracht kan fase **4 — Sponsor CRM** zijn. Die is niet gestart.
+- Fase **4 — Sponsor CRM**: lokaal afgerond en geverifieerd.
+- Volgende opdracht kan fase **5 — Sponsorpakketten en contracten** zijn. Die is niet gestart.
 - Er werkt een technische Next.js-basis met minimale lokale database. Er werken nu
   login, gecontroleerde uitnodigingen en een private Storage-basis. Er is nog geen
   volledige sponsoradministratie of deployment. De startpagina meldt dit expliciet.
-- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D021. Werkinstructies:
+- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D026. Werkinstructies:
   [AGENTS.md](AGENTS.md). Installatie/start: [README.md](README.md).
 
 ## Fasestatus
@@ -22,13 +23,93 @@
 | 1 | Projectarchitectuur en database | Lokaal afgerond |
 | 2 | Design en navigatie | Lokaal afgerond |
 | 3 | Authenticatie en toegangsrechten | Lokaal afgerond |
-| 4 | Sponsor CRM | Niet gestart |
+| 4 | Sponsor CRM | Lokaal afgerond |
 | 5 | Sponsorpakketten en contracten | Niet gestart |
 | 6 | Financieel beheer | Niet gestart |
 | 7 | Intern dashboard en rapportages | Niet gestart |
 | 8 | Persoonlijk sponsorportaal | Niet gestart |
 | 9 | Acquisitie, evenementen en notificaties | Niet gestart |
 | 10 | Publieke sponsorwebsite en productievoorbereiding | Niet gestart |
+
+## Fase 4 — Sponsor CRM
+
+- Echte routes `/account/sponsors`, `/nieuw`, `/[id]`, `/[id]/bewerken` en
+  `/[id]/contacten/[contactId]`, beschermd op server én via Data API-RLS.
+- Bedrijfsprofiel, relatiestatus, interne notities, optionele zakelijke velden en
+  interne verantwoordelijke. Servercontrole valideert eigenaar als actief intern
+  account. Selectie via beperkt `crm_owners`, geen sponsor-/bestuursgebruikerslijst.
+- Meerdere contacten, toevoegen/bewerken/archiveren/herstellen en atomair primair
+  contact wisselen. De bedrijfsbinding van een contact is onveranderlijk.
+- Zoeken op bedrijfsnaam, status-/archieffilter en paginering van 25. Lege en fout-
+  toestanden melden het echte queryresultaat; geen fake statistieken of demodata.
+- Eén bedrijfsbron met veilige profielvelden; interne velden en contactgegevens
+  afzonderlijk via RLS. Sponsoren lezen uitsluitend eigen veilige bedrijfsvelden;
+  bestuur geen contacten/notities. Alle gewone queries met eigen JWT.
+- Genormaliseerde bedrijfsnaam en ingevuld KvK uniek, ook in archief. Prospect naar
+  actief via update van hetzelfde record. Geen automatische merge of gegevensimport.
+- Beide bedrijfsdelen atomair opslaan; validatie via React Hook Form, server-Zod en
+  databaseconstraints. Bij conflict geen half opgeslagen bedrijfsrecord.
+- Beperkte commissie-uitnodiging voor actief contact van het gekozen bedrijf; alleen
+  Sponsorrol, geen zelfmachtiging, interne roloverschrijving of bedrijfsovergang.
+  Echte lokale uitnodiging via Auth/Mailpit gecontroleerd. Meerdere gemachtigden
+  per bedrijf. Machtigingen apart intrekken met onmiddellijk effect op volgende query.
+- Archiveren verwijdert niets en verandert bestaande rechten niet automatisch;
+  dit staat expliciet bij de handeling. Geen nieuwe contacten/activaties bij archief.
+- Private CRM-audit met actor, entiteit, bedrijf, operatie en tijdstip. Geen vrije
+  notities dupliceren in logs. Algemene Super Admin-herkoppeling blijft werken en
+  houdt geen contactreferentie van een ander bedrijf over.
+
+| Controle fase 4 | Resultaat |
+| --- | --- |
+| Dependency-installatie | React Hook Form 7.92.0 en resolvers 7.0.6 exact gepind; lockfile bijgewerkt. |
+| `npm run lint`, `npm run typecheck` | Geslaagd. |
+| `npm test` | 10 geslaagd, 0 mislukt/overgeslagen. Nieuwe schema-/URL-/invoercontroles. |
+| Lokale SQL-lint public/private met fail-on warning | Geslaagd, geen schemafouten. Geen hosted advisorrapport. |
+| `npm run db:test` | 279 geslaagd in drie bestanden. RLS, privévelden, rollen/anon/inactief, FK-isolatie, contactprimair, duplicaten, rollback, eigenaar, archief, commissie- en Super Admin-machtigingen. |
+| Lege lokale stack | Alle migraties en 279 tests geslaagd in VVPSponsorCrmReplay; daarna gestopt, geen reset/wisactie. |
+| `npm run test:crm` | Geslaagd: echte Auth/Data API en browserflow voor commissie, aanmaken/valideren, prospectconversie op hetzelfde ID, contacten/primair contact, eigenaar, contactbewerking/archief/herstel, duplicaten en veilige velden. |
+| CRM-autorisatie | Sponsor/bestuur via echte browserlogin geen intern dossier, geen notities in HTML. Directe API-queries naar notities/contacten leveren geen data; mutaties, zelfmachtiging en bedrijfsherkoppeling geweigerd. |
+| Commissie-uitnodiging/intrekking | Echte uitnodiging geaccepteerd door lokale Supabase; meerdere gebruikers op hetzelfde bedrijf. Intrekken via browser geeft permanente status en direct 0 toegankelijke bedrijven met bestaand JWT. |
+| Mobiel/desktop/axe | Formulier en dossier op 360/1440 px gecontroleerd, geen pagina-overflow of axe-bevindingen; screenshot dossier geïnspecteerd. Geen volledige WCAG-audit. |
+| `npm run test:auth` | Bestaande echte login/herstel/uitnodiging/MFA/Data/Storage-flow geslaagd na CRM-upgrade. |
+| `npm run test:e2e` | Productiebuild geslaagd, 35 browsertests geslaagd; 0 mislukt/overgeslagen. Inclusief sessievereiste voor lijst, nieuw bedrijf en dossier. |
+| `npm ci --no-fund` | Geslaagd uit de bijgewerkte lockfile. Bestaande ESLint 9-supportwaarschuwing blijft bekend. |
+
+### Uitgevoerde correcties
+
+- Een generieke audittrigger verwees naar recordvelden die niet op alle tabellen
+  bestaan. Een vervolgmigratie gebruikt uitsluitend passende UUIDs via JSONB;
+  de mislukte proefinsert rolde terug. Toegepaste migraties niet herschreven.
+- Aanvullende migraties regelen standaard interne bedrijfsrij, contactworkflow,
+  eigenaarbescherming en compatibiliteit met bestaand Super Admin-rolbeheer.
+- De vier oude negatieve INSERT/UPDATE-tests voor interne rollen waren na fase 4
+  niet langer geldig. Nieuwe CRM-tests toetsen die toegestane mutaties positief;
+  negatieve UPDATE-tests voor andere rollen toetsen 0 gewijzigde rijen via RLS
+  in plaats van een grantfout. Overige beveiligingscontroles behouden.
+- Lege/ongeldige websites veroorzaakten aanvankelijk een URL-exceptie in client-
+  validatie; nu veilige parse met expliciete negatieve tests. Formulieren wachten
+  op hydration en gebruiken POST zodat geen interne velden in een fallback-GET staan.
+- De axe-helper vereist een expliciete browsercontext; testsetup gecorrigeerd.
+  Na intrekking verdwijnt de actie; de blijvende machtigingsbadge heeft nu een
+  statusrol, zodat de werkelijke nieuwe toestand ook wordt aangekondigd.
+
+Cloud-startinstructies zijn als concept bijgewerkt voor CRM en de 10/279/35
+controles. Het bestaande installatiescript blijft `npm ci` gebruiken. Dit publiceert
+of deployt niets; herstel in een nieuwe cloudtaak is niet geclaimd.
+
+### Grenzen
+
+Voorlopige velden/statussen: geen echte bronadministratie, import of KvK-/BTW-
+registercontrole. Geen automatische deduplicatie of merge van bestaande gegevens.
+Geen pakketten, contracten, financiën of volledige sponsorportaalmodule gebouwd.
+De echte eerste Super Admin en productie-inrichting blijven afzonderlijke
+gecontroleerde ingebruikname. Geen echte sponsor-/contactdata verwerkt.
+Alle tests gebruiken uitsluitend eigen UUIDs en herkenbare `.example`-fixtures;
+geen blijvende seeds of andere gebruikersbestanden gewijzigd.
+
+Bestanden: `src/modules/crm`, echte CRM-routes, accountlink/CSS, zes nieuwe
+migraties, bijgewerkte databasetypes, schema-/SQL-/API-/browsertests en deze
+projectdocumenten. Auth-testopruiming bijgewerkt voor de nieuwe FK's/audit.
 
 ## Fase 3 — resultaat en controles
 
@@ -293,12 +374,12 @@ gepubliceerd of gedeployd; herstel in een nieuwe cloudtaak is niet getest.
 
 ## Open taken en volgende fase
 
-Fase 3 is lokaal afgerond. Fase 4 (Sponsor CRM) vereist een nieuwe opdracht:
-bedrijfs-/contactvelden, statussen, archivering, eigenaarschap, duplicatenbeleid en
-beperkte commissie-uitnodigingen. Geen echte bronadministratie importeren zonder
-expliciete opdracht en proefvalidatie. Officieel logo blijft open. Eerste echte
-Super Admin en productieconfiguratie worden pas bij gecontroleerde ingebruikname
-uitgevoerd; hiervoor zijn geen waarden in Git opgeslagen.
+Fase 4 is lokaal geïmplementeerd. Fase 5 (Sponsorpakketten en contracten) vereist
+een nieuwe opdracht en echte pakket-/rechten-/prijsinformatie, voorwaarden,
+looptijden, contracttemplates en het verlengings-/opzegproces. Die gegevens worden
+niet verzonnen. Echte CRM-import blijft een aparte opdracht met proefvalidatie.
+Officieel logo, eerste echte Super Admin en productieconfiguratie blijven open;
+geen waarden of echte persoonsgegevens in Git opgeslagen.
 
 ## Logboek
 
@@ -308,3 +389,4 @@ uitgevoerd; hiervoor zijn geen waarden in Git opgeslagen.
 | 2026-11-12 | 1 | Technische appbasis, lokale basismigratie, RLS/grants, getypeerde clients, veilige configuratiehelpers, herhaalbare workflow en lokale controles. | D011–D013 |
 | 2026-11-12 | 2 | Clubkleuren, publieke/interne/portaallayouts, lokale ontwerpgrens, toegankelijke componenten en 25 geslaagde browsercontroles. | D014–D016 |
 | 2026-11-12 | 3 | Auth, live autorisatie, bedrijfsmachtigingen, private Storage, uitnodiging, herstel en optionele MFA lokaal geverifieerd. | D017–D021 |
+| 2026-11-12 | 4 | CRM, meerdere contacten, interne privacy, prospectconversie, filters/archief en beperkte commissie-uitnodigingen. | D022–D026 |
