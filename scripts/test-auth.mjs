@@ -119,6 +119,12 @@ try {
         new Blob(["%PDF-1.4\nTEST"], { type: "application/pdf" }),
       );
     assert.equal(upload.error, null, "interne upload");
+    // Fase 5: nieuwe documenten zijn pas na servercontrole beschikbaar.
+    assert.equal(
+      (await clients[1].rpc("finalize_document", { target: docIds[i] })).error,
+      null,
+      "documentcontrole",
+    );
   }
   for (let i = 0; i < clients.length; i++) {
     const result = await clients[i].from("sponsors").select("id");
@@ -362,7 +368,7 @@ try {
   const ids = users.map((u) => `'${u.id}'`).join(",");
   if (ids)
     sql(
-      `delete from public.documents where sponsor_id in ('${companies.join("','")}');delete from private.access_audit where target in (${ids}) or actor in (${ids});delete from private.sponsor_memberships where user_id in (${ids});delete from private.user_access where user_id in (${ids});delete from private.crm_audit where sponsor_id in ('${companies.join("','")}');delete from public.sponsor_internal where sponsor_id in ('${companies.join("','")}');delete from public.sponsors where id in ('${companies.join("','")}');`,
+      `delete from public.documents where sponsor_id in ('${companies.join("','")}');delete from private.access_audit where target in (${ids}) or actor in (${ids});delete from private.sponsor_memberships where user_id in (${ids});delete from private.user_access where user_id in (${ids});delete from private.crm_audit where sponsor_id in ('${companies.join("','")}');delete from private.contract_audit where sponsor_id in ('${companies.join("','")}') or actor in (${ids});delete from public.sponsor_internal where sponsor_id in ('${companies.join("','")}');delete from public.sponsors where id in ('${companies.join("','")}');`,
     );
   for (const u of users) await admin.auth.admin.deleteUser(u.id);
 }

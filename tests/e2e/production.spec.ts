@@ -62,6 +62,12 @@ for (const route of [
   "/account/sponsors",
   "/account/sponsors/nieuw",
   "/account/sponsors/50000000-0000-0000-0000-000000000001",
+  "/account/pakketten",
+  "/account/pakketten/50000000-0000-0000-0000-000000000001",
+  "/account/contracten",
+  "/account/contracten/nieuw",
+  "/account/contracten/50000000-0000-0000-0000-000000000001",
+  "/account/sponsorrechten",
 ]) {
   test(`CRM vereist een sessie: ${route}`, async ({ page }) => {
     await page.goto(route);

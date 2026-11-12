@@ -5,8 +5,8 @@
 Dit is de functionele en technische projectbasis voor het nieuwe sponsorportaal van VV Pernis, een Nederlandse amateurvoetbalvereniging uit Rotterdam. Opdrachtgever is lid van de sponsorcommissie.
 
 - Laatst bijgewerkt: 2026-11-12.
-- Huidige fase: **4 — Sponsor CRM**, lokaal geïmplementeerd en geverifieerd. Bedrijven, contacten, interne gegevens, filters, archief en beperkte commissie-uitnodigingen werken.
-- Volgende fase: **5 — Sponsorpakketten en contracten**, uitsluitend na een nieuwe opdracht van de gebruiker.
+- Huidige fase: **5 — Sponsorpakketten en contracten**, lokaal geïmplementeerd en geverifieerd. Pakketversies, contracten met regels/rechten, atomair bevestigen, amendementen, verlenging, beëindiging, uitvoering met bewijs en private contractdocumenten werken.
+- Volgende fase: **6 — Financieel beheer**, uitsluitend na een nieuwe opdracht van de gebruiker. Vooraf nodig: BTW-regels en facturatiedefinities (zie §10).
 - Alle onderstaande tabellen, routes, policies en processen zijn **ontwerp**, tenzij in `PROGRESS.md` expliciet als geïmplementeerd en geverifieerd vermeld.
 - `PROJECT.md` beschrijft scope, architectuur, bedrijfsregels, ontwerpkeuzes en acceptatiecriteria. `PROGRESS.md` bevat de gedetailleerde voortgang, controles, open taken en bekende problemen. `AGENTS.md` bevat blijvende werkinstructies.
 - Werk na iedere fase de faseaanduiding en belangrijke ontwerpbeslissingen hier bij; leg uitvoeringsdetails in `PROGRESS.md` vast. Ontwerp is geen bewijs van werkende functionaliteit.
@@ -140,6 +140,64 @@ tijdstip, zonder kopieën van vrije notities. Bewaartermijnen volgen vóór echt
 gegevensverwerking. Formulieren gebruiken React Hook Form en server-side herhaalde
 Zod-validatie; beide bedrijfsdelen worden in één DB-transactie opgeslagen. De lijst
 zoekt op bedrijfsnaam, filtert status/archief en toont 25 bedrijven per pagina.
+
+### Fase 5: pakketten, contracten en sponsorrechten
+
+Interne routes (alleen actieve Super Admin/commissie, server- én RLS-gecontroleerd):
+`/account/pakketten`, `/account/pakketten/[id]`, `/account/contracten`,
+`/account/contracten/nieuw`, `/account/contracten/[id]` en `/account/sponsorrechten`.
+Het bedrijfsdossier toont de contracten van dat bedrijf. Er zijn **geen officiële
+pakketten, prijzen of contracten** ingevoerd; de opdrachtgever voert die zelf in.
+
+- **Pakketten:** `sponsorship_packages` → `package_versions` → `package_right_templates`.
+  Een conceptversie is bewerkbaar; publiceren vergrendelt haar (trigger) en faseert
+  de vorige gepubliceerde versie uit. Maximaal één gepubliceerde versie per pakket.
+  Alleen gepubliceerde versies zijn kiesbaar. De catalogus is intern; publieke
+  sponsormogelijkheden volgen pas in fase 10.
+- **Contracten:** `contracts` (nummer `SC-JJJJ-NNNN` via vergrendelde teller, status
+  `draft`/`confirmed`/`terminated`, looptijd, opzegdatum, verleng-/voorwaardentekst,
+  voorganger binnen hetzelfde bedrijf, partijmomentopname). `contract_lines` bevat
+  pakket- of maatwerkregels met prijsmomentopname en een door de database berekend
+  regeltotaal. Bij een pakketregel worden de rechten als **eigen afspraken
+  gekopieerd** naar `contract_rights`; latere pakketversies raken ze niet.
+- **Bevestigen** is één transactie onder rijlock: minimaal één regel, actief bedrijf,
+  partijgegevens als momentopname. Daarna zijn regels en afgesproken rechten
+  onveranderlijk (triggers, ook voor de database-eigenaar); alleen termijn-/
+  planningsvelden (deadline, verantwoordelijke, uitvoerstatus, portaalzichtbaarheid)
+  blijven beheerbaar. `expired` is geen opgeslagen status maar een afgeleide weergave
+  ("looptijd verstreken"), zodat geen nachtelijke taak nodig is.
+- **Amendementen** (`contract_amendments`, append-only, volgnummer per contract):
+  nieuwe einddatum/opzegdatum, extra regels (ook negatief, bijv. korting), extra
+  rechten en annulering van rechten — alles atomair, met vastgelegde vorige waarden
+  en verwijzing van elke nieuwe/geannuleerde rij naar het amendement. De
+  oorspronkelijke baseline blijft reconstrueerbaar (`contract_totals.baseline_total`
+  versus `current_total`, view met `security_invoker`).
+- **Verlenging** maakt een nieuw concept met voorganger (max. één opvolger) en kopieert
+  positieve regels en niet-geannuleerde rechten zonder deadlines. Geen automatische
+  verlenging. **Beëindigen** vereist datum en reden en bewaart alle historie.
+- **Uitvoering:** `right_fulfillments` per recht (gedeeltelijk mogelijk), alleen bij
+  bevestigde/beëindigde contracten, niet in de toekomst, niet op geannuleerde rechten.
+  Eenmalige controle-markering; correctie via 'ongedaan maken' met reden (geen delete).
+  Delen met de sponsor is een expliciete keuze per registratie.
+- **Documenten:** `documents` kreeg categorie, MIME, grootte, SHA-256 en uploadstatus.
+  Nieuwe documenten starten `pending`; de server controleert bestandssignatuur
+  (PDF/PNG/JPEG, max. 8 MB), registreert via RPC, uploadt met de eigen sessie en geeft
+  pas vrij na controle van object en grootte. Koppeling via `contract_documents` en
+  `fulfillment_evidence` met samengestelde FK's binnen hetzelfde bedrijf. Sponsor/bestuur
+  zien alleen `available` én expliciet gedeelde stukken; de downloadroute weigert
+  `pending`. Documentmetadata kan niet meer naar een ander bedrijf worden verplaatst
+  (updaterecht beperkt tot titel/delen).
+- **Autorisatie:** schrijven uitsluitend via begrensde `SECURITY DEFINER`-RPC's met
+  vaste `search_path` en interne rolcontrole; geen directe insert/update/delete-grants
+  op contracttabellen. Sponsoren lezen alleen eigen bevestigde/beëindigde contracten,
+  regels, portaalzichtbare rechten, gedeelde geldige uitvoering, amendementen en
+  gedeelde documenten — nooit concepten of de pakketcatalogus. Bestuur krijgt in fase 5
+  nog geen directe contracttoegang; het goedgekeurde overzicht volgt via rapportage
+  (fase 7). Alle mutaties komen in `private.contract_audit` (actor, bedrijf, entiteit,
+  operatie, tijd; geen vrije tekst).
+- **Bedragen:** exacte `numeric` (eenheidsprijs 4, totalen 2 decimalen), Zod valideert
+  als decimale tekst; de app rekent niet zelf. Het BTW-tarief op regels is optioneel
+  vastgelegd; of prijzen incl./excl. BTW zijn wordt in fase 6 vastgesteld.
 
 ## 2. Doel en productgrenzen
 
@@ -543,7 +601,7 @@ Deze punten blokkeren de initialisatie niet. Vraag ze op bij de relevante fase; 
 | Fase 2 | Blauw `#125B9E` en oranje `#E67522` ontvangen. Officieel logo met gebruiksrechten en eventuele huisstijlgids blijven open; blokkeren de layoutbasis niet. |
 | Fase 3 | Wie wordt eerste Super Admin, interne gebruikers/rollen, authenticatievoorkeur, MFA-/uitnodigingsbeleid, definitieve bestuurstoegang; mag één persoon meerdere sponsorbedrijven vertegenwoordigen? |
 | Fase 4 | Voorlopige velden/statussen en duplicaatbeleid geïmplementeerd; echte bronadministratie/import niet aangeleverd of uitgevoerd. Wijzigingen in velden/duplicaatbeleid eerst beoordelen; import alleen na aparte opdracht en proefvalidatie. |
-| Fase 5 | Echte pakketten, prijzen, rechten, looptijden, voorwaarden, contract-/verleng-/opzegproces, bestaande contracttemplates, wie uitvoering goedkeurt en welk bewijs sponsoren mogen zien. |
+| Fase 5 | Module gebouwd; nog aan te leveren: echte pakketten, prijzen, rechten, looptijden, voorwaarden en contracttemplates (invoer door de commissie zelf), wie uitvoering formeel goedkeurt (vier-ogen gewenst?), welk bewijs sponsoren mogen zien, en of contractnummering een bestaand formaat moet volgen. |
 | Fase 6 | BTW-regels, prijzen inclusief/exclusief BTW, factuur-/creditnummering, betalingstermijnen, termijnen, seizoen/boekjaar, bestaande facturatiesoftware, correcties/restituties, wie betalingen vastlegt en welke bestuursoverzichten nodig zijn. |
 | Fase 7 | Gewenste KPI's, definitie actieve sponsor, periode-/seizoenfilters, rapportages en exportformaten. |
 | Fase 8 | Gewenste sponsorcontactroute, toegestane wijzigingsverzoeken, zichtbare contract-/bewijsvelden en beheer van gemachtigden. |
@@ -586,6 +644,13 @@ Accounts en secrets via veilige provider-/omgevingsinstellingen aanleveren, niet
 | D025 | 2026-11-12 | Vastgelegd | Commissie-uitnodiging via actief contact: uitsluitend sponsorrol voor hetzelfde bedrijf, provider-emailmatch en vergrendelde accountkoppeling. Geen interne roloverschrijving of bedrijfsovergang. Intrekken apart en direct effectief. |
 | D026 | 2026-11-12 | Vastgelegd | React Hook Form/Zod aan client en server, DB-constraints en transactionele RPCs. Private minimale CRM-audit zonder vrije notities; 25 resultaten per pagina. Geen gewone CRM-queries met secretclient. |
 
+| D027 | 2026-11-12 | Vastgelegd | Pakketversies: concept bewerkbaar, publicatie vergrendelt en faseert vorige versie uit; max. één gepubliceerde versie per pakket. Catalogus intern tot fase 10. Geen officiële inhoud vooraf ingevuld. |
+| D028 | 2026-11-12 | Vastgelegd | Contracten schrijven alleen via begrensde definer-RPC's; bevestigen is atomair met partijmomentopname. Daarna regels/afgesproken rechten onveranderlijk via triggers; alleen planning/uitvoerstatus/zichtbaarheid wijzigbaar. Status `draft`/`confirmed`/`terminated`; 'verlopen' is afgeleid. |
+| D029 | 2026-11-12 | Vastgelegd | Wijzigingen na bevestiging via append-only amendementen (einddatum/opzegdatum, regels incl. negatieve, rechten toevoegen/annuleren) met vorige waarden en herleidbare rijen. Baseline en actuele waarde apart opvraagbaar. Verlenging = nieuw concept met voorganger, max. één opvolger. |
+| D030 | 2026-11-12 | Voorlopig | Uitvoering per recht, controle-markering zonder vier-ogenprincipe (wie goedkeurt is nog open), correctie via ongedaan maken met reden. Delen met sponsor expliciet per registratie/document. |
+| D031 | 2026-11-12 | Vastgelegd | Nieuwe documenten starten `pending`; serverinhoudscontrole (PDF/PNG/JPEG, 8 MB) en objectcontrole vóór `available`. Downloadroute weigert `pending`; documentmetadata alleen titel/delen wijzigbaar. Bestaande fase-3-documenten bleven `available`. |
+| D032 | 2026-11-12 | Voorlopig | Bestuur in fase 5 geen directe contracttoegang; sponsor alleen eigen vastgelegde afspraken via RLS (portaalschermen in fase 8). BTW-tarief optioneel op regels; incl./excl.-definitie in fase 6. |
+
 ### Bronnen voor latere technische verificatie
 
 Bij initialisatie zijn de Supabase-skills en actuele documentatie over tabellen/viewbeveiliging en private/public Storage-buckets geraadpleegd, plus de changelog. Dit is ontwerpverificatie, geen test van een projectdatabase. Controleer versies en documentatie opnieuw bij daadwerkelijke implementatie.
@@ -615,4 +680,10 @@ staan in `PROGRESS.md`.
 Fase 4 is lokaal geverifieerd met 10 Node-tests, 279 databasecontroles, 35
 browserregressies en de echte CRM-/authintegratieflows. Het volledige schema en
 dezelfde databasecontroles werken op een nieuwe lege lokale stack. Er is geen
-productie-inrichting of echte gegevensimport uitgevoerd. Fase 5 is niet gestart.
+productie-inrichting of echte gegevensimport uitgevoerd.
+
+Fase 5 is lokaal geverifieerd met 16 Node-tests, 380 databasecontroles (waarvan 101
+nieuw), 41 browserregressies, SQL-lint zonder bevindingen en de echte
+contractintegratieflow (`npm run test:contracts`) plus geslaagde auth-/CRM-regressies.
+Alle migraties en controles werken ook op een nieuwe lege lokale stack. Geen
+productie-inrichting, echte pakketten/contracten of deployment. Fase 6 is niet gestart.

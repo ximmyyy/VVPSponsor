@@ -11,10 +11,11 @@ export async function GET(
     return new NextResponse(null, { status: 404 });
   const { data, error } = await client
     .from("documents")
-    .select("object_path")
+    .select("object_path,upload_status")
     .eq("id", id)
     .maybeSingle();
-  if (error || !data) return new NextResponse(null, { status: 404 });
+  if (error || !data || data.upload_status !== "available")
+    return new NextResponse(null, { status: 404 });
   const result = await client.storage
     .from("private-documents")
     .createSignedUrl(data.object_path, 60);

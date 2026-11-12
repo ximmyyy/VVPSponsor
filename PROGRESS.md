@@ -8,11 +8,12 @@
 - Fase **2 — Design en navigatie**: afgerond en lokaal geverifieerd.
 - Fase **3 — Authenticatie en toegangsrechten**: lokaal geïmplementeerd en geverifieerd.
 - Fase **4 — Sponsor CRM**: lokaal afgerond en geverifieerd.
-- Volgende opdracht kan fase **5 — Sponsorpakketten en contracten** zijn. Die is niet gestart.
+- Fase **5 — Sponsorpakketten en contracten**: lokaal afgerond en geverifieerd.
+- Volgende opdracht kan fase **6 — Financieel beheer** zijn. Die is niet gestart.
 - Er werkt een technische Next.js-basis met minimale lokale database. Er werken nu
   login, gecontroleerde uitnodigingen en een private Storage-basis. Er is nog geen
   volledige sponsoradministratie of deployment. De startpagina meldt dit expliciet.
-- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D026. Werkinstructies:
+- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D032. Werkinstructies:
   [AGENTS.md](AGENTS.md). Installatie/start: [README.md](README.md).
 
 ## Fasestatus
@@ -24,12 +25,81 @@
 | 2 | Design en navigatie | Lokaal afgerond |
 | 3 | Authenticatie en toegangsrechten | Lokaal afgerond |
 | 4 | Sponsor CRM | Lokaal afgerond |
-| 5 | Sponsorpakketten en contracten | Niet gestart |
+| 5 | Sponsorpakketten en contracten | Lokaal afgerond |
 | 6 | Financieel beheer | Niet gestart |
 | 7 | Intern dashboard en rapportages | Niet gestart |
 | 8 | Persoonlijk sponsorportaal | Niet gestart |
 | 9 | Acquisitie, evenementen en notificaties | Niet gestart |
 | 10 | Publieke sponsorwebsite en productievoorbereiding | Niet gestart |
+
+## Fase 5 — Sponsorpakketten en contracten
+
+- Pakketbeheer (`/account/pakketten`): pakket aanmaken/wijzigen/archiveren, conceptversie
+  met richtprijs, optioneel BTW-tarief en standaardrechten (React Hook Form + field array),
+  publiceren (vergrendelt, vorige versie uitgefaseerd) en uitfaseren.
+- Contracten (`/account/contracten`, `/nieuw`, `/[id]`): concept per CRM-bedrijf met
+  validatie op looptijd/opzegdatum, pakketregels (prijs en rechten als eigen kopie) en
+  maatwerkregels, extra rechten, verwijderen alleen in concept, atomair bevestigen met
+  partijmomentopname, amendementen, verlenging, beëindiging. Filter op status/bedrijf,
+  25 per pagina. Contractwaarde uitsluitend uit de databaseview `contract_totals`.
+- Sponsorrechten: planning/verantwoordelijke/status/portaalzichtbaarheid beheren,
+  uitvoering registreren (ook gedeeltelijk), controleren, delen/niet delen, ongedaan maken
+  met reden. Overzicht `/account/sponsorrechten` sorteert open rechten op deadline met
+  filter "mijn verantwoordelijkheid" en markeert verlopen deadlines.
+- Documenten: upload van contractdocumenten en bewijs met serverinhoudscontrole, SHA-256,
+  `pending` → `available` na objectcontrole, delen met sponsor/bestuur expliciet, intrekken
+  direct effectief voor nieuwe downloadlinks (60 s).
+- Navigatie: Sponsors · Pakketten · Contracten · Sponsorrechten in de interne shell;
+  links op `/account`; contractlijst in het bedrijfsdossier.
+
+| Controle fase 5 | Resultaat |
+| --- | --- |
+| `npm run lint`, `npm run typecheck` | Geslaagd. |
+| `npm test` | 16 geslaagd (6 nieuw: decimalen, periode, regels/amendement, versielimiet, afgeleide fase, uploadsignaturen), 0 mislukt. |
+| `npm run db:test` | 380 geslaagd in vier bestanden; `contracts.test.sql` 101 nieuwe controles: rollen/anon/inactief, twee bedrijven met meerdere gebruikers, pakketversie-onveranderlijkheid, oude contracten intact na nieuwe versie, atomair bevestigen en mislukte bevestiging zonder wijziging, triggers ook voor eigenaar, amendement + baseline, verlenging/max. één opvolger, beëindiging, bedrijfsoverschrijdende FK's, uitvoering/ongedaan maken, documentstatus en -verplaatsing, audit. |
+| Lokale SQL-lint public/private, fail-on warning | Geslaagd na vervolgmigratie met expliciete jsonb-casts. Geen hosted advisorrapport (geen hosted project). |
+| Lege lokale stack (VVPSponsorContractReplay, andere poorten) | Alle 13 migraties en 380 controles geslaagd; daarna gestopt, geen volumes gewist. |
+| `npm run test:contracts` | Geslaagd: echte browser/Auth/Data API/Storage-flow (zie scriptmelding), inclusief sponsor A/B/bestuur/anon-isolatie, signed download, intrekking, geweigerde vervalste upload, 360/1440 px en axe zonder bevindingen. Fixtures volledig opgeruimd (0 achtergebleven gebruikers/rijen/objecten gecontroleerd). |
+| `npm run test:auth` | Geslaagd na aanpassing (documenten worden nu gefinaliseerd; nieuwe audittabel opgeruimd). |
+| `npm run test:crm` | 2× achter elkaar geslaagd. De eerste run direct na het starten van de devserver faalde één keer in de axe/overflowstap van het dossier; bij herhaling met logging geen overflow of axe-bevinding. Vermoedelijk timing bij eerste compilatie; als bekende flakiness genoteerd. |
+| `npm run test:e2e` | Productiebuild geslaagd; 41 browsertests geslaagd (6 nieuwe sessievereisten voor fase-5-routes). |
+| Visuele controle | Screenshots van contractdossier op 1440 en 360 px geïnspecteerd. |
+
+### Correcties tijdens fase 5
+
+- `insert_line` las bij maatwerkregels een niet-toegewezen record; ontdekt door pgTAP en
+  opgelost in vervolgmigratie `contract_line_fix` (toegepaste migratie niet herschreven).
+- SQL-lint meldde impliciete text→jsonb-casts; opgelost in `contract_amendment_casts`.
+- `supabase migration new` wacht op stdin buiten een terminal; het aldus lege bestand
+  is direct gevuld. Gebruik `</dev/null` bij scripting.
+- Na publiceren/bevestigen/beëindigen verdwijnt het betreffende formulier; de nieuwe
+  toestand wordt via een statusbadge (`role=status`) aangekondigd.
+- Bestaande pgTAP-documentfixtures en `test:auth` expliciet op `available` / finalize
+  gezet, omdat nieuwe documenten nu standaard `pending` zijn.
+
+### Grenzen en open punten
+
+- Geen echte pakketten, prijzen, contracten of templates ingevoerd; geen digitale
+  ondertekening of PDF-generatie van contracten. Bevestigen ≠ handtekening.
+- Bestuur heeft nog geen contractinzage (volgt als goedgekeurd overzicht in fase 7);
+  het sponsorportaal-scherm voor contracten/rechten volgt in fase 8 (RLS is al klaar en
+  getest). Geen e-mailherinneringen voor deadlines/opzegdata (fase 9).
+- Uitvoeringscontrole zonder vier-ogenprincipe; besluit opdrachtgever nodig.
+- Mislukte uploads blijven als `pending` metadata (onzichtbaar buiten commissie); een
+  opruimproces/heruploadknop is nog niet gebouwd. Geen virusscan; alleen
+  signatuurcontrole en beperkte bestandstypen.
+- Contractnummerteller is per kalenderjaar (Europe/Amsterdam) en loopt ook door bij
+  tests en verwijderde testfixtures; nummers zijn uniek maar niet gatenvrij.
+- Test-opruiming gebruikt lokaal `session_replication_role=replica` om de historie-
+  triggers voor uitsluitend eigen fixtures te omzeilen. Nooit op gedeelde databases.
+
+Bestanden: `supabase/migrations/20261112193854_packages_contracts.sql`,
+`…194623_contract_line_fix.sql`, `…194653_contract_amendment_casts.sql`,
+`supabase/tests/contracts.test.sql`, `src/modules/contracts/*`, routes onder
+`src/app/account/{pakketten,contracten,sponsorrechten}`, CRM-shell/dossier/account,
+downloadroute, `next.config.ts` (serveractie-limiet 9 MB), databasetypes,
+`scripts/test-contracts.mjs`, `tests/contracts-schema.test.ts`, e2e-routes,
+aangepaste `test-auth.mjs` en `auth.test.sql`-fixtures, documentatie.
 
 ## Fase 4 — Sponsor CRM
 
@@ -374,10 +444,11 @@ gepubliceerd of gedeployd; herstel in een nieuwe cloudtaak is niet getest.
 
 ## Open taken en volgende fase
 
-Fase 4 is lokaal geïmplementeerd. Fase 5 (Sponsorpakketten en contracten) vereist
-een nieuwe opdracht en echte pakket-/rechten-/prijsinformatie, voorwaarden,
-looptijden, contracttemplates en het verlengings-/opzegproces. Die gegevens worden
-niet verzonnen. Echte CRM-import blijft een aparte opdracht met proefvalidatie.
+Fase 5 is lokaal geïmplementeerd. Echte pakketten/prijzen/voorwaarden voert de
+commissie zelf in via de module; die gegevens worden niet verzonnen. Fase 6
+(Financieel beheer) vereist een nieuwe opdracht en vooraf: BTW-regels (prijzen incl./
+excl.), factuur-/creditnummering, betalingstermijnen en termijnfacturatie,
+seizoen/boekjaar, correctie-/restitutiebeleid en wie betalingen vastlegt. Echte CRM-import blijft een aparte opdracht met proefvalidatie.
 Officieel logo, eerste echte Super Admin en productieconfiguratie blijven open;
 geen waarden of echte persoonsgegevens in Git opgeslagen.
 
@@ -390,3 +461,4 @@ geen waarden of echte persoonsgegevens in Git opgeslagen.
 | 2026-11-12 | 2 | Clubkleuren, publieke/interne/portaallayouts, lokale ontwerpgrens, toegankelijke componenten en 25 geslaagde browsercontroles. | D014–D016 |
 | 2026-11-12 | 3 | Auth, live autorisatie, bedrijfsmachtigingen, private Storage, uitnodiging, herstel en optionele MFA lokaal geverifieerd. | D017–D021 |
 | 2026-11-12 | 4 | CRM, meerdere contacten, interne privacy, prospectconversie, filters/archief en beperkte commissie-uitnodigingen. | D022–D026 |
+| 2026-11-12 | 5 | Pakketversies, contracten met regels/rechten, atomaire bevestiging, amendementen, verlenging/beëindiging, uitvoering met bewijs en private contractdocumenten; 380 DB-controles, 41 browsertests en echte contractflow. | D027–D032 |

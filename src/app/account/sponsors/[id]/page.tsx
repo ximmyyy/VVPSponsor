@@ -11,6 +11,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { statusLabels } from "@/modules/crm/schema";
+import {
+  formatDate,
+  statusLabels as contractStatus,
+} from "@/modules/contracts/schema";
 export default async function Detail({
   params,
 }: {
@@ -18,7 +22,7 @@ export default async function Detail({
 }) {
   const { id } = await params;
   const { client, company, values } = await companyDetails(id);
-  const [contacts, members, owners] = await Promise.all([
+  const [contacts, members, owners, contracts] = await Promise.all([
     client
       .from("sponsor_contacts")
       .select("id,name,position,email,phone,is_primary,archived_at")
@@ -26,8 +30,13 @@ export default async function Detail({
       .order("created_at"),
     client.rpc("sponsor_members", { company: id }),
     client.rpc("crm_owners"),
+    client
+      .from("contracts")
+      .select("id,contract_number,title,status,starts_on,ends_on")
+      .eq("sponsor_id", id)
+      .order("starts_on", { ascending: false }),
   ]);
-  if (contacts.error || members.error || owners.error)
+  if (contacts.error || members.error || owners.error || contracts.error)
     throw new Error("Contacten en machtigingen konden niet geladen worden.");
   return (
     <>
@@ -109,6 +118,46 @@ export default async function Detail({
           </p>
         </Card>
       </div>
+      <section className="mt-8" aria-labelledby="contracten">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 id="contracten" className="text-xl font-semibold">
+            Contracten
+          </h2>
+          {!company.archived_at && (
+            <Button asChild variant="outline">
+              <Link href={`/account/contracten/nieuw?sponsor=${id}`}>
+                Contract opstellen
+              </Link>
+            </Button>
+          )}
+        </div>
+        <Card className="p-6">
+          {contracts.data.length ? (
+            <ul className="space-y-2 text-sm">
+              {contracts.data.map((c) => (
+                <li key={c.id}>
+                  <Link
+                    className="inline-flex min-h-11 items-center underline"
+                    href={`/account/contracten/${c.id}`}
+                  >
+                    {c.contract_number} · {c.title}
+                  </Link>{" "}
+                  <Badge>
+                    {contractStatus[c.status as keyof typeof contractStatus]}
+                  </Badge>{" "}
+                  <span className="text-muted-foreground">
+                    {formatDate(c.starts_on)} – {formatDate(c.ends_on)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Nog geen contracten voor dit bedrijf.
+            </p>
+          )}
+        </Card>
+      </section>
       <section className="mt-8">
         <h2 className="mb-4 text-xl font-semibold">Contactpersonen</h2>
         <p className="mb-5 text-sm text-muted-foreground">

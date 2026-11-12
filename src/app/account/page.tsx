@@ -34,12 +34,21 @@ export default async function Account() {
           </p>
         ))}
         {["super_admin", "sponsorcommissie"].includes(access.role) && (
-          <Link href="/account/sponsors" className="my-6 block underline">
-            Sponsors beheren
-          </Link>
+          <>
+            <Link href="/account/sponsors" className="my-6 block underline">
+              Sponsors beheren
+            </Link>
+            <Link href="/account/contracten" className="my-6 block underline">
+              Contracten en sponsorrechten
+            </Link>
+            <Link href="/account/pakketten" className="my-6 block underline">
+              Sponsorpakketten
+            </Link>
+          </>
         )}
         <p className="my-6">
-          De functionele sponsormodules volgen in latere fases.
+          Financiën, rapportages en het persoonlijke sponsorportaal volgen in
+          latere fases.
         </p>
         {access.role === "super_admin" && (
           <Link href="/account/gebruikers" className="my-6 block underline">

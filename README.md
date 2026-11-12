@@ -1,7 +1,8 @@
 # VV Pernis Sponsorportaal
 
-Technische basis voor één modulaire Next.js-app met Supabase. Fases 1–4 zijn lokaal geïmplementeerd: technische basis, layouts, authenticatie en
-sponsor-CRM. Pakketten, contracten, financiën en publieke sponsorinhoud volgen later.
+Technische basis voor één modulaire Next.js-app met Supabase. Fases 1–5 zijn lokaal geïmplementeerd: technische basis, layouts, authenticatie,
+sponsor-CRM en pakketten/contracten/sponsorrechten. Financiën, rapportages, het
+sponsorportaal en publieke sponsorinhoud volgen later.
 Lees bij ontwikkeling eerst [PROJECT.md](PROJECT.md), [PROGRESS.md](PROGRESS.md)
 en [AGENTS.md](AGENTS.md). Gebruik de bestaande checkout; een cloudtaak is al geïsoleerd.
 
@@ -189,7 +190,7 @@ intrekking, uitnodiging via Mailpit, herstel, eenmalige tokens en optionele MFA.
 De test weigert een ander databasedoel, gebruikt uitsluitend willekeurige UUIDs en
 `.example`-accounts en ruimt uitsluitend eigen fixtures op. Niet parallel uitvoeren
 met zichzelf of een dienstherstart. Stop de eigen devserver vóór `test:e2e`.
-Databasebasis: 189 pgTAP-controles, Node-basis: 7 tests. De nieuwe migraties werken
+Databasebasis toen: 189 pgTAP-controles, Node-basis: 7 tests (zie fase 5 voor de actuele aantallen). De nieuwe migraties werken
 ook op een lege lokale stack. Geen reset, remote migratie of deployment nodig.
 
 ## Fase 4: Sponsor CRM
@@ -231,3 +232,35 @@ De CRM-integratieflow gebruikt echte lokale JWTs, browserformulieren, Data API e
 een uitnodiging naar Mailpit. Zij ruimt uitsluitend eigen UUID/.example-fixtures op.
 Bestaande authregressies: `npm run test:auth`. Stop daarna de eigen Next-devserver
 voor `npm run test:e2e`. Geen productiegegevens of automatische seeds nodig.
+
+## Fase 5: pakketten, contracten en sponsorrechten
+
+Super Admin en commissie zien in de interne navigatie **Pakketten**, **Contracten** en
+**Sponsorrechten** (ook bereikbaar via `/account`). Er zijn geen officiële pakketten of
+prijzen ingevuld: de commissie voert die zelf in.
+
+1. Maak een pakket en een conceptversie met richtprijs en standaardrechten; publiceer
+   die. Gepubliceerde versies zijn vergrendeld; wijzigen = nieuwe versie.
+2. Stel vanuit een CRM-bedrijf een conceptcontract op, voeg pakket- en/of maatwerkregels
+   en rechten toe en bevestig. Bevestigen legt regels, rechten en partijgegevens in één
+   transactie vast; de sponsor ziet het contract pas daarna (via RLS; portaalscherm in fase 8).
+3. Wijzigingen na bevestiging gaan via een amendement. Verlengen maakt een nieuw concept
+   met voorganger; beëindigen vraagt datum en reden. Er wordt niets verwijderd.
+4. Registreer uitvoering per recht, voeg bewijs toe (PDF/PNG/JPEG, max. 8 MB, inhoud
+   servergecontroleerd) en deel expliciet met de sponsor.
+
+```sh
+npm run db:migrate
+npm run db:types
+npm run db:test          # 380 controles
+npm test                 # 16 tests
+npm run dev
+# Tweede terminal; niet parallel met test:auth/test:crm of dienstherstarts:
+npm run test:contracts
+```
+
+`test:contracts` gebruikt echte lokale JWTs, de browser, Data API en Storage, en ruimt
+uitsluitend eigen `.example`/TEST-fixtures op. Elders dan deze cloudmachine kan
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE` naar een eigen Chromium wijzen. Stop daarna de eigen
+devserver voor `npm run test:e2e` (41 tests). Gebruik bij scripting
+`supabase migration new <naam> </dev/null`, anders wacht de CLI op stdin.
