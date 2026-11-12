@@ -9,3 +9,6 @@ supabase/.temp/
 supabase/.branches/
 *.log
 .npm-cache/
+test-results/
+playwright-report/
+next-env.d.ts

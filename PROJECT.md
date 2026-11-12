@@ -5,8 +5,8 @@
 Dit is de functionele en technische projectbasis voor het nieuwe sponsorportaal van VV Pernis, een Nederlandse amateurvoetbalvereniging uit Rotterdam. Opdrachtgever is lid van de sponsorcommissie.
 
 - Laatst bijgewerkt: 2026-11-12.
-- Huidige fase: **1 — Projectarchitectuur en database**, geïmplementeerd en lokaal geverifieerd. Alleen de technische fundering werkt; productmodules volgen later.
-- Volgende fase: **2 — Design en navigatie**, uitsluitend na een nieuwe opdracht van de gebruiker.
+- Huidige fase: **2 — Design en navigatie**, geïmplementeerd en lokaal geverifieerd. De publieke basislayout en lokale interne/portaallayouts werken; functionele auth en productmodules volgen later.
+- Volgende fase: **3 — Authenticatie en toegangsrechten**, uitsluitend na een nieuwe opdracht van de gebruiker.
 - Alle onderstaande tabellen, routes, policies en processen zijn **ontwerp**, tenzij in `PROGRESS.md` expliciet als geïmplementeerd en geverifieerd vermeld.
 - `PROJECT.md` beschrijft scope, architectuur, bedrijfsregels, ontwerpkeuzes en acceptatiecriteria. `PROGRESS.md` bevat de gedetailleerde voortgang, controles, open taken en bekende problemen. `AGENTS.md` bevat blijvende werkinstructies.
 - Werk na iedere fase de faseaanduiding en belangrijke ontwerpbeslissingen hier bij; leg uitvoeringsdetails in `PROGRESS.md` vast. Ontwerp is geen bewijs van werkende functionaliteit.
@@ -32,6 +32,31 @@ TypeScript 5.9.3, Tailwind 4.3.5, Supabase CLI 3.1.0, supabase-js 2.119.0,
 SSR 0.12.7 en Zod 4.6.7. PostgreSQL draait lokaal op 17.11. De lockfile is
 onderdeel van versiebeheer. ESLint 9.39.5 is de compatibele lijn voor de huidige
 Next.js-plugins; de upstream supportwaarschuwing is een bekende toolingbeperking.
+
+### Fase-2-ontwerp en grenzen
+
+De opdrachtgever heeft clubblauw **`#125B9E`** en cluboranje **`#E67522`** aangeleverd.
+De bronconfiguratie staat in `src/lib/branding.ts`; semantische CSS-/Tailwind-tokens
+sturen alle layouts. Een typografisch VV-merk vervangt geen officieel logo; dat is
+nog niet aangeleverd. Oranje wordt niet gebruikt voor kleine tekst op wit.
+
+De publieke basislayout op `/` toont uitsluitend projectstatus en de toekomstige
+indeling. Er zijn geen gepubliceerde sponsorprofielen, pakketten of aanvraagformulieren.
+`/beheer`, `/beheer/bestuur`, `/portaal` en `/ontwerp` zijn **lokale ontwerpweergaven**,
+geen roltoekenningen of ingelogde sessies. Ze zijn alleen bereikbaar met
+`NODE_ENV=development`, `APP_ENV=local`, een loopback-host en zonder Vercel-context.
+De ontwikkelserver bindt aan `127.0.0.1`. De server-side proxy blokkeert productie
+met HTTP 404 en `no-store`, ook met `APP_ENV=local`; layouts herhalen de controle.
+Er worden nergens bedrijfsgegevens geladen. Fase 3 moet echte sessie-/rolchecks
+invoeren voordat deze routes als private applicatie ontsloten mogen worden.
+
+De commissie-/bestuurs-/sponsorindelingen delen één shell met contextspecifieke
+navigatie, mobiele Radix/shadcn Sheet, skiplink en zichtbare focus. Super Admin
+krijgt later dezelfde interne shell met geautoriseerde beheeronderdelen; fase 2
+heeft geen rolwisselaar of rolbeheer. Alleen het werkende overzicht heeft een link;
+toekomstige modules zijn niet-interactief als 'Later' aangeduid. De lokale
+componentenbibliotheek toont laad-, fout-, lege en tabelstatussen als voorbeelden.
+De Next.js-fallbacks voor laden, fouten en niet-gevonden pagina's zijn aangesloten.
 
 ## 2. Doel en productgrenzen
 
@@ -155,7 +180,7 @@ De precieze bestuursexports en financiële kolommen worden vóór ontsluiting af
 
 ### Modulegrenzen en toekomstige mappen
 
-Onderstaande structuur blijft het doelontwerp. Alleen de fase-1-onderdelen zijn aangemaakt; lege toekomstige modules/routes worden niet vooruit aangemaakt:
+Onderstaande structuur blijft het doelontwerp. De fundering en fase-2-layouts zijn aangemaakt; functionele modules volgen in hun eigen fase:
 
 ```text
 src/
@@ -191,7 +216,7 @@ De businesslogica hangt niet van webpagina's af. Voor een toekomstige Capacitor-
 ### Design, navigatie en toegankelijkheid
 
 - Professioneel, sportief zakelijk SaaS-ontwerp: primair blauw, secundair oranje, gecombineerd met wit, lichtgrijs en donkerblauw.
-- Kleuren via semantische CSS-variabelen/Tailwind-tokens; logo, clubnaam en goedgekeurde branding via clubconfiguratie. Exacte huisstijlwaarden pas na aanlevering als officieel markeren.
+- Kleuren via semantische CSS-variabelen/Tailwind-tokens en `src/lib/branding.ts`: de opdrachtgever leverde blauw `#125B9E` en oranje `#E67522`. Clubnaam en kleuren zijn configureerbaar; een database-adapter voor branding volgt later. Officieel logo nog niet aangeleverd.
 - Interne navigatie: Dashboard, Sponsors, Pakketten, Contracten, Sponsorrechten, Financiën, Acquisitie, Taken, Evenementen, Documenten, Rapportages en rolgebonden Instellingen. Alleen beschikbare modules activeren.
 - Sponsornavigatie: Overzicht, Bedrijf, Samenwerking, Sponsorrechten, Documenten en facturen, Evenementen, Contact. Bestuur krijgt eigen leesnavigatie binnen de interne omgeving.
 - Mobile-first, bruikbaar vanaf circa 360 px; grote aanraakdoelen, responsieve kaarten/tabellen en mobiele navigatie. WCAG 2.2 AA als ontwerpdoel: contrast, toetsenbordbediening, zichtbare focus, formulierlabels en foutmeldingen. Status nooit alleen met kleur communiceren.
@@ -430,7 +455,7 @@ Deze punten blokkeren de initialisatie niet. Vraag ze op bij de relevante fase; 
 | Moment | Benodigde informatie/beslissing |
 | --- | --- |
 | Fase 1 | Gewenste Git-repository/eigenaarschap, packagebeheer indien voorkeur, beschikbare ontwikkelomgeving, verantwoordelijke voor Supabase/Vercel en eventueel budget/regio. Alleen lokale/testinrichting binnen de nieuwe opdracht. |
-| Fase 2 | Officieel logo in bruikbaar formaat, exacte blauwe/oranje huisstijlwaarden, gebruiksrechten en eventuele huisstijlgids. |
+| Fase 2 | Blauw `#125B9E` en oranje `#E67522` ontvangen. Officieel logo met gebruiksrechten en eventuele huisstijlgids blijven open; blokkeren de layoutbasis niet. |
 | Fase 3 | Wie wordt eerste Super Admin, interne gebruikers/rollen, authenticatievoorkeur, MFA-/uitnodigingsbeleid, definitieve bestuurstoegang; mag één persoon meerdere sponsorbedrijven vertegenwoordigen? |
 | Fase 4 | Bestaande bronadministratie en importwens, verplichte bedrijfs-/contactvelden, CRM-statussen, eigenaarschap en duplicaatbeleid. Eerst veilige import met proef/validatie ontwerpen. |
 | Fase 5 | Echte pakketten, prijzen, rechten, looptijden, voorwaarden, contract-/verleng-/opzegproces, bestaande contracttemplates, wie uitvoering goedkeurt en welk bewijs sponsoren mogen zien. |
@@ -460,6 +485,10 @@ Accounts en secrets via veilige provider-/omgevingsinstellingen aanleveren, niet
 | D012 | 2026-11-12 | Vastgelegd | Minimale basis: clubinstellingen en gebruikersprofielen publiek schema met RLS; autorisatietoekenningen in `private.user_access`. Actieve accounts beheren alleen hun eigen weergavenaam, Super Admin leest profielen en wijzigt clubnaam; geen directe rolmutaties. Bedrijfsmachtigingen en auth-workflows volgen in fase 3. |
 | D013 | 2026-11-12 | Vastgelegd | CLI v3 gebruikt lokale doelen standaard, zonder `--local`; scripts tonen geen lokale secret keys. Een nauw begrensde Docker-wrapper corrigeert alleen de lokale BusyBox Auth-healthcheck met `-Y off`; externe proxy- en TLS-verificatie blijven intact. |
 
+| D014 | 2026-11-12 | Vastgelegd | Opdrachtgever levert clubblauw `#125B9E` en cluboranje `#E67522`; bronconfiguratie in `src/lib/branding.ts`, semantische CSS-tokens. Geen officieel logo aangeleverd; typografisch merk is een ontwerpplaceholder. |
+| D015 | 2026-11-12 | Vastgelegd | Interne, bestuurs-, sponsor- en componentenweergaven uitsluitend in lokale development met loopback-host en APP_ENV=local. Proxy geeft productie 404/no-store; geen vervanging voor authenticatie. Fase 3 vereist echte server-/DB-autorisatie. |
+| D016 | 2026-11-12 | Vastgelegd | shadcn/Radix-componenten, Lucide, 44px-bediening, mobiel dialoogmenu, skiplinks, semantische statussen en reduced motion. Alleen werkende routes activeren; toekomstige modules niet aanklikbaar. Chromium/axe-browsercontroles vastgelegd met productie-afscherming. |
+
 ### Bronnen voor latere technische verificatie
 
 Bij initialisatie zijn de Supabase-skills en actuele documentatie over tabellen/viewbeveiliging en private/public Storage-buckets geraadpleegd, plus de changelog. Dit is ontwerpverificatie, geen test van een projectdatabase. Controleer versies en documentatie opnieuw bij daadwerkelijke implementatie.
@@ -479,5 +508,9 @@ Initialisatie is compleet wanneer de drie documenten in de projecthoofdmap staan
 Fase 1 is lokaal geverifieerd: installatie via lockfile, lint, typecheck, vijf
 Node-tests, productiebuild, 117 pgTAP-controles, lokale SQL-lint en HTTP-controles.
 De basismigratie en tests werken ook op een tweede lege lokale stack. Er is geen
-productieomgeving, werkende login of volledige applicatiemodule. Fase 2 kan apart
-worden opgedragen; de exacte resultaten en beperkingen staan in `PROGRESS.md`.
+productieomgeving, werkende login of volledige applicatiemodule. Fase 2 is eveneens geverifieerd: lint/typecheck/build, zes Node-tests en 25
+Chromium-browsercontroles, inclusief axe-scans op 360/1440 px, toetsenbordbediening,
+reduced motion en blokkade van productie-previewroutes. Dit is geen volledige
+WCAG-audit. De echte login, serverautorisatie, bedrijfsmachtigingen en Storage
+blijven fase 3; die fase is nog niet gestart. De exacte resultaten en beperkingen
+staan in `PROGRESS.md`.

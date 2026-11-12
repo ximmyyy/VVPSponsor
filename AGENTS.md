@@ -33,3 +33,13 @@ Dit bestand (`AGENTS.md`) geldt voor de hele projectmap.
 - Werk `PROJECT.md` bij voor fase/status, belangrijke technische besluiten en gewijzigde architectuur/acceptatiecriteria. Houd het een overzichtelijk projectkader.
 - Werk `PROGRESS.md` bij voor afgeronde onderdelen, gewijzigde bestanden, controles, open taken, bekende problemen en benodigde configuratie. Houd alle drie documenten consistent; registreer beslissingen met een stabiel ID in `PROJECT.md`.
 - Rapporteer in het Nederlands wat daadwerkelijk werkt, wat nog ontbreekt, welke handelingen/configuratie nodig zijn en welke fase daarna kan worden opgedragen. Begin die volgende fase niet automatisch.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

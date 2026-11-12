@@ -5,11 +5,12 @@
 - Laatst bijgewerkt: **2026-11-12**.
 - Fase **0 — Initialisatie**: afgerond.
 - Fase **1 — Projectarchitectuur en database**: geïmplementeerd en lokaal geverifieerd.
-- Volgende opdracht kan fase **2 — Design en navigatie** zijn. Die is niet gestart.
+- Fase **2 — Design en navigatie**: afgerond en lokaal geverifieerd.
+- Volgende opdracht kan fase **3 — Authenticatie en toegangsrechten** zijn. Die is niet gestart.
 - Er werkt een technische Next.js-basis met minimale lokale database. Er is nog
   geen functionele login, gebruikersbeheer, sponsoradministratie, Storage-bucket
   of deployment. De startpagina meldt dit expliciet.
-- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D013. Werkinstructies:
+- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D016. Werkinstructies:
   [AGENTS.md](AGENTS.md). Installatie/start: [README.md](README.md).
 
 ## Fasestatus
@@ -18,7 +19,7 @@
 | --- | --- | --- |
 | 0 | Initialisatie en projectgeheugen | Afgerond |
 | 1 | Projectarchitectuur en database | Lokaal afgerond |
-| 2 | Design en navigatie | Niet gestart |
+| 2 | Design en navigatie | Lokaal afgerond |
 | 3 | Authenticatie en toegangsrechten | Niet gestart |
 | 4 | Sponsor CRM | Niet gestart |
 | 5 | Sponsorpakketten en contracten | Niet gestart |
@@ -27,6 +28,85 @@
 | 8 | Persoonlijk sponsorportaal | Niet gestart |
 | 9 | Acquisitie, evenementen en notificaties | Niet gestart |
 | 10 | Publieke sponsorwebsite en productievoorbereiding | Niet gestart |
+
+## Afgerond in fase 2
+
+- Clubkleuren ontvangen: blauw `#125B9E`, oranje `#E67522`. Eén brandingconfiguratie
+  en semantische tokens voor kleur, tekst, oppervlak, randen, focus en zijbalk.
+  Geen officieel logo ontvangen; het typografische VV-merk is een ontwerpplaceholder.
+- Publieke basislayout op `/` met projectstatus, drie toekomstige omgevingen en
+  expliciete melding dat inloggen/sponsorfuncties nog niet beschikbaar zijn.
+  Geen sponsorprofielen, pakketten, prijzen, contracten of formulieren verzonnen.
+- Lokale commissie-indeling `/beheer`, bestuursinzage `/beheer/bestuur` en
+  sponsorindeling `/portaal`. Gedeelde responsieve shell, zijbalk, breadcrumbs,
+  contextspecifieke navigatie en mobiele Radix/shadcn Sheet met focusbeheer.
+  Geen fake ingelogd account, statistieken of bedrijfsgegevens.
+- Server-side ontwerpgrens in `src/proxy.ts` plus layoutcontroles: development,
+  APP_ENV=local, loopback-host, geen Vercel-context. Productie retourneert 404/no-store,
+  ook met APP_ENV=local. `npm run dev` bindt alleen aan 127.0.0.1.
+  Dit verleent geen gebruikersrechten en vervangt de autorisatie uit fase 3 niet.
+- Alleen het werkende overzicht krijgt een actieve navigatielink. Toekomstige
+  modules zijn niet aanklikbaar en als 'Later' gemarkeerd. Bestuur heeft geen
+  beheeronderdelen; er is geen rolwisselaar of rolbeheer.
+- Gedeelde Button, Card, Badge, Skeleton en Sheet volgens shadcn/ui-patronen;
+  Button/Sheet op basis van de officiële MIT-bronnen. Lucide-iconen, native
+  semantiek, 44px-bediening, zichtbare focus, skiplinks en reduced motion.
+- `/ontwerp`: alleen lokale componentenbibliotheek met gelabelde lege-, fout- en
+  laadvoorbeelden en een horizontaal scrollbare voorbeeldtabel zonder records.
+  Globale Next.js-loading/error/not-found-fallbacks aangesloten. Error-adapter
+  gebruikt `retry` volgens de documentatie van de geïnstalleerde Next.js-versie.
+- Playwright 1.65.0 en axe 4.14.0, aparte lokale development- en productie-servers.
+  De cloud gebruikt geïnstalleerde Chromium; andere machines kunnen Playwrights
+  Chromium installeren of PLAYWRIGHT_CHROMIUM_EXECUTABLE instellen.
+
+## Controles fase 2
+
+| Controle | Resultaat |
+| --- | --- |
+| Dependency-installatie en `npm ci --no-fund` | Geslaagd met exacte versies en bijgewerkte lockfile. Bestaande ESLint-supportwaarschuwing blijft een bekende toolingbeperking. |
+| `npm run lint` | Geslaagd; nul fouten/waarschuwingen. |
+| `npm run typecheck` | Geslaagd. |
+| `npm test` | 6 geslaagd, 0 mislukt/overgeslagen; waaronder positieve en negatieve gevallen voor de lokale ontwerpgrens. |
+| `npm run build` | Geslaagd; publieke en lokale routes plus serverproxy compileren. |
+| `npx --no-install playwright test` na de build | **25 geslaagd, 0 mislukt, 0 overgeslagen**. `npm run test:e2e` combineert build en browserrunner. |
+| Responsiviteit en browserfouten | `/`, `/beheer`, `/beheer/bestuur`, `/portaal`, `/ontwerp` getest op 360×800 en 1440×1000; geen horizontale pagina-overflow of JavaScript-paginafouten. |
+| axe WCAG 2 A/AA, 2.1 AA en 2.2 AA-regels | Geen bevindingen op de tien bovenstaande pagina/viewportcombinaties en het geopende mobiele menu. Dit bewijst geen volledige WCAG-conformiteit. |
+| Toetsenbord | Skiplink als eerste tabstop; focus naar hoofdinhoud. Mobiele dialoog met Enter openen, focus binnen dialoog, Escape sluiten, focus terug naar trigger; navigatie sluit menu. |
+| Componentstatussen | Laadstatus, foutalert, lege toestand, disabled bediening en focusbare/scrollbare tabel aangetroffen. Animatie uit bij reduced motion. |
+| Productie-afscherming | `/beheer`, `/beheer/bestuur`, `/portaal`, `/ontwerp` en onbekende subroutes geven 404/no-store. Geen lokale ontwerplinks op publieke productiepagina, ondanks APP_ENV=local. |
+| Niet-lokale host | Developmentverzoek met Host=example.com krijgt 404; geen interne shell. |
+| Publieke 404 | Niet-gevondenpagina met werkende teruglink naar startpagina. |
+| Visuele inspectie | Desktop commissie/publieke layout, mobiel sponsoroverzicht en geopend menu via screenshots geïnspecteerd. |
+| Database | Geen schema-, migratie-, grant-, RLS- of Storagewijzigingen in fase 2. De 117 databasecontroles uit fase 1 zijn historisch bewijs; niet opnieuw als fase-2-run opgevoerd. |
+| `git diff --check` | Geslaagd. |
+
+De eerste browserrun had twee foutselecties: Next.js voegt zelf een tweede
+`role=alert` toe. De controle is beperkt tot de foutstatus binnen `main`; de
+gewenste melding is niet verwijderd of afgezwakt. Daarna alle 25 tests geslaagd.
+Een herstart botste eenmalig met de eigen visuele-reviewserver; die is gestopt en
+dezelfde browserrunner is opnieuw uitgevoerd. Next dev heeft automatisch een
+Next.js-instructieblok aan AGENTS.md toegevoegd; bestaand projectbeleid behouden.
+De relevante meegeleverde guides voor proxy, loading, error, not-found en
+ontwikkelindicatoren zijn geraadpleegd. Het echte foutboundary-/loginproces is
+niet als end-to-endflow getest; fout-UI en frameworkadapter zijn voorbereid.
+
+Cloud-startinstructies (`start_skill`) zijn bijgewerkt en als concept opgeslagen.
+Het bestaande installatiescript blijft `npm ci` gebruiken. Dit heeft niets
+gepubliceerd of gedeployd; herstel in een nieuwe cloudtaak is niet getest.
+
+## Bestanden fase 2
+
+- `src/components/`: branding, publieke shell, gedeelde statussen, UI-componenten,
+  navigatie, workspaceshell en drie contextspecifieke overzichtsindelingen.
+- `src/app/`: vernieuwde startpagina/layout/CSS, beheer/bestuur/portaal/ontwerp,
+  loading/error/not-found. `src/lib/branding.ts`, lokale ontwerpguards, `utils.ts`
+  en `src/proxy.ts` ondersteunen de layouts; geen auth- of datalaag toegevoegd.
+- Het gegenereerde `next-env.d.ts` wordt volgens de meegeleverde Next.js-guide
+  niet meer gevolgd in Git; typegen/dev/build maken het opnieuw aan.
+- Tooling: `components.json`, `playwright.config.ts`, `tests/e2e/`,
+  `tests/design-preview.test.ts`, package/lockfile, gitignore en Next-config.
+- Projectgeheugen: PROJECT.md, dit bestand en README.md bijgewerkt. Het door Next
+  gegenereerde instructieblok in AGENTS.md is behouden.
 
 ## Afgerond in fase 1
 
@@ -59,7 +139,7 @@
   metadata-spoofing, live accountblokkade, constraints en standaardgrants.
   Bedrijfsisolatie/Storage-tests volgen met hun schema in fase 3; niet geclaimd.
 
-## Uitgevoerde controles
+## Uitgevoerde controles fase 1 (historisch)
 
 | Controle | Resultaat |
 | --- | --- |
@@ -129,13 +209,15 @@
 
 ## Open taken en volgende fase
 
-Fase 1 heeft geen resterende functionele implementatietaak. Voor fase 2: officiële
-clublogo's, kleurwaarden en gebruiksrechten aanleveren wanneer beschikbaar; zonder
-bronmateriaal geen voorlopige kleuren als officiële huisstijl presenteren.
-Fase 2 moet afzonderlijk worden opgedragen. Auth-/rolbeheer, uitnodigingen,
-bedrijfsmachtigingen en Storage blijven fase 3. Reële sponsorgegevens en pakketten
-zijn nu niet nodig. Hostingregio/budget, productiebeheer en provideraccounts volgen
-pas wanneer daarvoor een expliciete opdracht bestaat.
+Fase 2 is afgerond; fase 3 vereist een afzonderlijke opdracht. Voor fase 3 moeten
+het eerste Super Admin-account, rolverdeling/bestuurstoegang, uitnodigings-/MFA-beleid
+en de mogelijke vertegenwoordiging van meerdere bedrijven worden afgestemd. Er is
+nog geen echte login, rolbeheer, bedrijfsmachtiging of private Storageflow.
+
+Het officiële logo met gebruiksrechten en een eventuele huisstijlgids blijven open.
+De aangeleverde kleurcodes zijn verwerkt en blokkeren geen verder werk. Geen echte
+sponsorgegevens, pakketten of productiesleutels nodig voor deze ontwerpfase.
+Er is geen deployment of remote databasewijziging uitgevoerd.
 
 ## Logboek
 
@@ -143,3 +225,4 @@ pas wanneer daarvoor een expliciete opdracht bestaat.
 | --- | --- | --- | --- |
 | 2026-11-12 | 0 | Drie projectdocumenten met scope, model, risico's en tienfasenplan; geen applicatie- of databasewijzigingen. Toenmalige inspectie-/documentcontrole afgerond. | D001–D010 |
 | 2026-11-12 | 1 | Technische appbasis, lokale basismigratie, RLS/grants, getypeerde clients, veilige configuratiehelpers, herhaalbare workflow en lokale controles. | D011–D013 |
+| 2026-11-12 | 2 | Clubkleuren, publieke/interne/portaallayouts, lokale ontwerpgrens, toegankelijke componenten en 25 geslaagde browsercontroles. | D014–D016 |

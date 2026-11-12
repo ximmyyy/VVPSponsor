@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { brandingStyle } from "@/lib/branding";
 
 export const metadata: Metadata = {
   title: "VV Pernis Sponsorportaal",
@@ -7,6 +8,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="nl"><body>{children}</body></html>;
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="nl" style={brandingStyle}>
+      <body>{children}</body>
+    </html>
+  );
 }
