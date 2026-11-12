@@ -5,15 +5,33 @@
 Dit is de functionele en technische projectbasis voor het nieuwe sponsorportaal van VV Pernis, een Nederlandse amateurvoetbalvereniging uit Rotterdam. Opdrachtgever is lid van de sponsorcommissie.
 
 - Laatst bijgewerkt: 2026-11-12.
-- Huidige fase: uitsluitend initialisatie; geen applicatie of database geïmplementeerd.
-- Volgende fase: **1 — Projectarchitectuur en database**, pas na een nieuwe opdracht van de gebruiker.
+- Huidige fase: **1 — Projectarchitectuur en database**, geïmplementeerd en lokaal geverifieerd. Alleen de technische fundering werkt; productmodules volgen later.
+- Volgende fase: **2 — Design en navigatie**, uitsluitend na een nieuwe opdracht van de gebruiker.
 - Alle onderstaande tabellen, routes, policies en processen zijn **ontwerp**, tenzij in `PROGRESS.md` expliciet als geïmplementeerd en geverifieerd vermeld.
 - `PROJECT.md` beschrijft scope, architectuur, bedrijfsregels, ontwerpkeuzes en acceptatiecriteria. `PROGRESS.md` bevat de gedetailleerde voortgang, controles, open taken en bekende problemen. `AGENTS.md` bevat blijvende werkinstructies.
 - Werk na iedere fase de faseaanduiding en belangrijke ontwerpbeslissingen hier bij; leg uitvoeringsdetails in `PROGRESS.md` vast. Ontwerp is geen bewijs van werkende functionaliteit.
 
-### Inspectie bij initialisatie
+### Vastgestelde werkmap en fase-1-basis
 
-De beschikbare projecthoofdmap is `/workspace`. Daar zijn geen bestaande applicatiebestanden, dependency manifests, migraties, tests of projectdocumenten aangetroffen. De aanwezige `.git`-map wordt door Git niet als geldige repository herkend. Er is dus nog geen werkende Git-checkout vastgesteld; niet aannemen dat wijzigingen al onder versiebeheer staan. Omgevingsmappen zijn geen applicatiecode en blijven ongemoeid.
+De geldige Git-checkout is `/workspace/VVPSponsor`, gekoppeld aan `ximmyyy/VVPSponsor`.
+De inspectie van `/workspace` tijdens initialisatie beschreef de toen beschikbare
+werkmap; het ontbreken van versiebeheer is in fase 1 opgelost door de bestaande
+checkout vast te stellen en de drie nieuwe documentatiecommits via fast-forward op
+te halen. Omgevingsmappen blijven ongemoeid.
+
+Fase 1 levert Next.js/TypeScript, Tailwind-aansluiting, configuratievalidatie,
+getypeerde browser-/SSR-leesclients, lokale Supabase-configuratie en één
+basismigratie. Alleen `public.club_settings`, `public.user_profiles` en
+`private.user_access` zijn geïmplementeerd. De vier rollen staan in
+`private.app_role`; een minimale private policyhelper leest de actuele eigen rol.
+Er is geen rolbeheer-, login-, sponsor-, financieel of Storage-proces. Nieuwe
+installatie en startcommando's staan in `README.md`; exacte controles in `PROGRESS.md`.
+
+Gepind: Node 24.22.1, npm 11.9.0, Next.js 16.4.6, React 19.3.1,
+TypeScript 5.9.3, Tailwind 4.3.5, Supabase CLI 3.1.0, supabase-js 2.119.0,
+SSR 0.12.7 en Zod 4.6.7. PostgreSQL draait lokaal op 17.11. De lockfile is
+onderdeel van versiebeheer. ESLint 9.39.5 is de compatibele lijn voor de huidige
+Next.js-plugins; de upstream supportwaarschuwing is een bekende toolingbeperking.
 
 ## 2. Doel en productgrenzen
 
@@ -137,7 +155,7 @@ De precieze bestuursexports en financiële kolommen worden vóór ontsluiting af
 
 ### Modulegrenzen en toekomstige mappen
 
-Onderstaande structuur is een voorstel, nog niet aangemaakt:
+Onderstaande structuur blijft het doelontwerp. Alleen de fase-1-onderdelen zijn aangemaakt; lege toekomstige modules/routes worden niet vooruit aangemaakt:
 
 ```text
 src/
@@ -211,7 +229,7 @@ De businesslogica hangt niet van webpagina's af. Voor een toekomstige Capacitor-
 | --- | --- | --- |
 | `club_settings` | singleton, clubnaam, branding, goedgekeurd logo, locale, timezone | Alleen niet-geheime clubconfiguratie; beheer door Super Admin. Publiek uitsluitend veilige brandingvelden. |
 | `user_profiles` | `user_id` → `auth.users`, weergavenaam, voorkeuren | Eigen profielgegevens; rol en bedrijf niet door gebruiker wijzigbaar. |
-| `user_access` | `user_id` → `auth.users`, `role`, `is_active` | Afgeschermde autorisatiebron met één van vier rollen; geen publieke gebruikerslijst. |
+| `private.user_access` | `user_id` → `auth.users`, `role`, `is_active` | Afgeschermde autorisatiebron met één van vier rollen; geen publieke gebruikerslijst. |
 | `sponsors` | naam, handelsnaam, KvK/BTW indien nodig, zakelijke adressen, website, relatiestatus, `archived_at` | Eén bedrijfsrecord voor prospect én sponsor; geen dubbel bedrijf na conversie. Statussen ontwerpen in fase 4. Geen interne notities in sponsorleesbare velden. |
 | `sponsor_internal` | `sponsor_id` → `sponsors`, commissie-eigenaar, interne notities | Afgeschermde interne bedrijfsinformatie. |
 | `sponsor_contacts` | `sponsor_id`, naam, functie, zakelijke e-mail/telefoon, primair-contactindicatie | Bedrijf 1:N contactpersonen; maximaal één primair contact via constraint. Geen verplichte login. |
@@ -351,7 +369,14 @@ Iedere fase start met een nieuwe gebruikersopdracht en eindigt met relevante con
 
 ## 8. Benodigde configuratie en environment variables
 
-**Nu is geen enkele waarde vereist.** Onderstaande namen zijn het voorgenomen configuratiecontract en worden pas met de betreffende module ingevoerd. Er is in deze fase geen `.env`-bestand aangemaakt. Werkelijke waarden alleen via lokale genegeerde bestanden of secretbeheer van de host/CI; nooit in chat, documentatie of broncode. Later een `.env.example` met lege/niet-geheime placeholders aanmaken.
+**Fase 1 gebruikt alleen lokale configuratie.** `.env.example` bevat placeholders;
+`npm run env:local` maakt veilig een genegeerde `.env.local` met `APP_ENV`, app-URL,
+lokale Supabase-URL en publishable key. Bestaande bestanden worden niet overschreven.
+Geen secret/service-role-key, hosted project of productiegegevens zijn vereist.
+De startpagina werkt zonder databaseconfiguratie; Supabase-clients valideren de
+configuratie bij aanroep. Overige onderstaande namen blijven toekomstig ontwerp.
+Werkelijke geheime waarden uitsluitend via veilig omgevingsbeheer; nooit in chat,
+documentatie, broncode of logs.
 
 | Naam | Bereik | Nodig vanaf | Gebruik |
 | --- | --- | --- | --- |
@@ -396,7 +421,7 @@ Aanvullende configuratie, nog geen vaste appvariabelen:
 | Afhankelijkheids-/CLI-/TLS-verandering | Gebroken build, migratie of mobiele verbinding | Stabiele versies pinnen, actuele docs/CLI-help raadplegen, moderne TLS en upgradecontrole. |
 | SSR en Capacitor blijken niet direct verenigbaar | Kostbare herbouw van portaal/login | Domeinservices scheiden; later een kleine native proef voor sessies/deep links, geen geforceerde static export. |
 | Back-up zonder bijbehorende Storage-herstelstrategie | Contractdocumenten niet herstelbaar | Database én Storage-back-up/export meenemen; restoreproef en retentie vóór productie. |
-| Geen geldige Git-repository in huidige werkmap | Geen aantoonbare versiegeschiedenis/CI | Repositorykoppeling of initialisatie oplossen in fase 1; nu alleen documentatie aanwezig. |
+| Git-checkout aanvankelijk niet vastgesteld | Verkeerde werkmap gebruikt | Opgelost in fase 1: `/workspace/VVPSponsor` is de bestaande geldige checkout. |
 
 ## 10. Later benodigde informatie van de opdrachtgever
 
@@ -431,6 +456,9 @@ Accounts en secrets via veilige provider-/omgevingsinstellingen aanleveren, niet
 | D008 | 2026-11-12 | Voorlopig | Nederlands, EUR en `Europe/Amsterdam`; exacte fiscale en rapportagedefinities volgen vóór financiële implementatie. |
 | D009 | 2026-11-12 | Vastgelegd | De tien modules worden stapsgewijs gebouwd; fase 1 maakt alleen de benodigde fundering, niet het hele datamodel. |
 | D010 | 2026-11-12 | Voorlopig | Eerst sponsoradministratie zonder bank-/boekhoudkoppeling of digitale ondertekening. Uitbreiding alleen na een aparte scopebeslissing. |
+| D011 | 2026-11-12 | Vastgelegd | Fase 1 gebruikt de bestaande checkout, Node 24/npm 11 met exacte dependencyversies en lockfile, Next.js App Router/strict TypeScript. Alleen lokale Supabase CLI 3.1.0-doelen; geen remote koppeling. |
+| D012 | 2026-11-12 | Vastgelegd | Minimale basis: clubinstellingen en gebruikersprofielen publiek schema met RLS; autorisatietoekenningen in `private.user_access`. Actieve accounts beheren alleen hun eigen weergavenaam, Super Admin leest profielen en wijzigt clubnaam; geen directe rolmutaties. Bedrijfsmachtigingen en auth-workflows volgen in fase 3. |
+| D013 | 2026-11-12 | Vastgelegd | CLI v3 gebruikt lokale doelen standaard, zonder `--local`; scripts tonen geen lokale secret keys. Een nauw begrensde Docker-wrapper corrigeert alleen de lokale BusyBox Auth-healthcheck met `-Y off`; externe proxy- en TLS-verificatie blijven intact. |
 
 ### Bronnen voor latere technische verificatie
 
@@ -448,4 +476,8 @@ Bij initialisatie zijn de Supabase-skills en actuele documentatie over tabellen/
 
 Initialisatie is compleet wanneer de drie documenten in de projecthoofdmap staan, de volledige scope en vier rollen zijn vastgelegd, het voorlopige datamodel en de moduleafhankelijkheden beschreven zijn, iedere fase een grens en acceptatiecriteria heeft, en configuratie, risico's en later benodigde informatie zijn benoemd.
 
-Deze basis is gereed om **ontwikkelfase 1** gericht op te dragen. Dat betekent dat de context is voorbereid; er werkt nog geen applicatie en er is nog geen database- of productieomgeving ingericht. De actuele controle-uitkomsten staan in `PROGRESS.md`.
+Fase 1 is lokaal geverifieerd: installatie via lockfile, lint, typecheck, vijf
+Node-tests, productiebuild, 117 pgTAP-controles, lokale SQL-lint en HTTP-controles.
+De basismigratie en tests werken ook op een tweede lege lokale stack. Er is geen
+productieomgeving, werkende login of volledige applicatiemodule. Fase 2 kan apart
+worden opgedragen; de exacte resultaten en beperkingen staan in `PROGRESS.md`.

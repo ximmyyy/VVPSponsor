@@ -1,0 +1,46 @@
+{
+  "name": "vvp-sponsorportaal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.x",
+    "npm": "11.x"
+  },
+  "packageManager": "npm@11.9.0",
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "env:local": "node scripts/local-env.mjs",
+    "db:start": "node scripts/start-local-supabase.mjs",
+    "db:stop": "SUPABASE_TELEMETRY_DISABLED=1 supabase stop",
+    "db:status": "node scripts/local-status.mjs",
+    "db:migrate": "SUPABASE_TELEMETRY_DISABLED=1 supabase migration up",
+    "db:test": "SUPABASE_TELEMETRY_DISABLED=1 supabase test db",
+    "db:types": "node scripts/database-types.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.119.0",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "server-only": "0.0.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.5",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.6",
+    "supabase": "3.1.0",
+    "tailwindcss": "4.3.5",
+    "typescript": "5.9.3"
+  }
+}
