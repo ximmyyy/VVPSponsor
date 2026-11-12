@@ -51,6 +51,7 @@ Opdracht: Supabase en Vercel via de gekoppelde connectors, SMTP voorlopig niet n
 | Auth | Site-URL en redirect-allowlist op de test-URL, registratie uit, wachtwoord ≥ 12, herauthenticatie bij wachtwoordwijziging, TOTP-MFA aan, anonieme login uit. Geen eigen SMTP (Supabase-standaardmail, alleen beperkt bruikbaar). |
 | Vercel | Project `vvp-sponsorportaal-test` (team ximmyyy, regio fra1, Node 24), gekoppeld aan `ximmyyy/VVPSponsor`. Variabelen: `APP_ENV=staging`, Supabase-URL, publishable key, app-URL. Geen server-secret. Vercel-authenticatie alleen op preview-builds; de test-URL is openbaar bereikbaar en de app vraagt zelf om in te loggen. |
 | Deployment | Productie-deployment van branch `claude/zealous-pascal-pc80uw` (commit `6e4b43b`) op https://vvp-sponsorportaal-test.vercel.app. |
+| Eerste Super Admin | Door de opdrachtgever aangemaakt in het Supabase-dashboard (bevestigd); daarna via eenmalige, voorwaardelijke SQL-bootstrap (precies één bevestigd account, nog geen rollen) `super_admin` gemaakt. Toekenning staat in `private.access_audit`. E-mailadres niet in documentatie of logs. |
 | Rooktest live | Start 200 met logo; `/inloggen` werkt; `/account`, dashboard, portaal, financiën → login; `/beheer`, `/portaal`, `/ontwerp` 404 no-store; private reacties no-store/no-referrer; favicon; anonieme Data API en `report_dashboard` 401; openbare registratie geweigerd (`signup_disabled`); geen browserfouten. |
 
 ### Gebruik en beperkingen
