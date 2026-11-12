@@ -10,11 +10,12 @@
 - Fase **4 — Sponsor CRM**: lokaal afgerond en geverifieerd.
 - Fase **5 — Sponsorpakketten en contracten**: lokaal afgerond en geverifieerd.
 - Fase **6 — Financieel beheer**: lokaal afgerond en geverifieerd.
-- Volgende opdracht kan fase **7 — Intern dashboard en rapportages** zijn. Die is niet gestart.
+- Fase **7 — Intern dashboard en rapportages**: lokaal afgerond en geverifieerd.
+- Volgende opdracht kan fase **8 — Persoonlijk sponsorportaal** zijn. Die is niet gestart.
 - Er werkt een technische Next.js-basis met minimale lokale database. Er werken nu
   login, gecontroleerde uitnodigingen en een private Storage-basis. Er is nog geen
   volledige sponsoradministratie of deployment. De startpagina meldt dit expliciet.
-- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D038. Werkinstructies:
+- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D042. Werkinstructies:
   [AGENTS.md](AGENTS.md). Installatie/start: [README.md](README.md).
 
 ## Fasestatus
@@ -28,10 +29,62 @@
 | 4 | Sponsor CRM | Lokaal afgerond |
 | 5 | Sponsorpakketten en contracten | Lokaal afgerond |
 | 6 | Financieel beheer | Lokaal afgerond |
-| 7 | Intern dashboard en rapportages | Niet gestart |
+| 7 | Intern dashboard en rapportages | Lokaal afgerond |
 | 8 | Persoonlijk sponsorportaal | Niet gestart |
 | 9 | Acquisitie, evenementen en notificaties | Niet gestart |
 | 10 | Publieke sponsorwebsite en productievoorbereiding | Niet gestart |
+
+## Fase 7 — Intern dashboard en rapportages
+
+Opdrachtgeverkeuzes (D039–D040): kerncijfers huidige betalende sponsors en budget, binnenkort
+aflopende contracten en kansen; actieve sponsor = gemarkeerd als betalend én actief; per
+seizoen (1 juli – 30 juni); bestuur ziet alle cijfers; export in Excel.
+
+- CRM: nieuw vinkje **Betalende sponsor** in het bedrijfsformulier, zichtbaar in het dossier.
+- `/account/dashboard`: seizoenskeuze (huidig + 5 terug, 1 vooruit), hero-bedrag, zes
+  kerncijfertegels met toelichting en vervallen-waarschuwing, grafiek seizoenen vergeleken,
+  cumulatief verloop, top-10 sponsors, kansenpaneel (aflopende contracten met dagen-teller
+  en opzegdatum, prospects), tabel van alle sponsors en definities. Tooltip bij hover en
+  'Toon als tabel' per grafiek. Links naar dossiers alleen voor interne rollen.
+- Bestuur: zelfde dashboard en export, navigatie toont alleen Dashboard. Link op `/account`.
+- `/account/dashboard/export?seizoen=JJJJ`: .xlsx met zes tabbladen, gelogd.
+
+| Controle fase 7 | Resultaat |
+| --- | --- |
+| Dependencies | `recharts` 3.10.1, `exceljs` 4.4.0, `react-is` 19.3.0 exact; override `uuid` 11.1.1 voor ExcelJS (getest dat `v4` werkt). `npm audit --omit=dev`: 0 kwetsbaarheden. |
+| Paletvalidatie | dataviz-validator: clubblauw/cluboranje/aqua passeert lichtheid, chroma, CVD (ΔE 10,6) en normaal zicht; contrast-WARN voor aqua → legenda + tabelweergave. |
+| `npm run lint`, `npm run typecheck` | Geslaagd. |
+| `npm test` | 24 geslaagd (3 nieuw: seizoensparsing, formule-neutralisatie, CRM-vlag), 0 mislukt. |
+| `npm run db:test` | 513 geslaagd in zes bestanden; `reporting.test.sql` 43 nieuwe controles: vlag, actieve-sponsordefinitie (incl. archief), budget naar rato (meerjarig/beëindigd), leeg seizoen, gefactureerd/ontvangen zonder concepten, openstaand/vervallen, aflopend en verlengd, opzegdatum, prospects, maanden/cumulatief, sortering, bestuur alle cijfers zonder notities/accounts en zonder ruwe tabellen, exportlog, sponsor/inactief/anon geweigerd. |
+| SQL-lint fail-on warning | Geslaagd na twee vervolgmigraties (zie correcties). |
+| Lege lokale stack (VVPSponsorReportReplay) | 18 migraties en 513 controles geslaagd; gestopt zonder volumes te wissen. |
+| `npm run test:reporting` | Geslaagd: commissie en bestuur via echte login, hero = rapportfunctie, drie grafieken met tooltip, tabelweergave, seizoenswissel, Excel-download teruggelezen (tabbladen, euro-opmaak, geen formules, geïnjecteerde naam als tekst met apostrof, geen notities/accounts), bestuur zonder interne navigatie/links, sponsor en anoniem geen dashboard/export, exportlog, 360/1440 px en axe. |
+| `test:crm`, `test:contracts`, `test:finance`, `test:auth` | Alle geslaagd na fase 7. |
+| `npm run test:e2e` | Productiebuild en 47 browsertests geslaagd (sessievereiste dashboard). |
+| Visuele controle | Screenshots 1440 en 390 px bekeken; asnotatie en toekomstige maanden daarna verbeterd. |
+
+### Correcties tijdens fase 7
+
+- SQL-lint vond een window-functie binnen een aggregaat en een CTE buiten bereik in het
+  detaildeel; opgelost in `reporting_monthly_fix` en `reporting_detail_fix`.
+- De integratietest vond een verschoven rij voor euro-opmaak in de Excel-samenvatting
+  (aantal sponsors kreeg €-opmaak); gecorrigeerd en specifiek getoetst.
+- Een geweigerde update via RLS geeft 0 rijen, geen fout; pgTAP-verwachting daarop aangepast.
+- Na visuele controle: per as één bedragnotatie en cumulatieve lijnen stoppen bij de huidige maand.
+
+### Grenzen en open punten
+
+- 'Kansen' = verlengkansen en prospects; een acquisitiepipeline met fases en verwachte
+  waarde volgt in fase 9. Geen periodieke e-mailrapportage.
+- Openstaand/vervallen zijn peildatumcijfers, niet seizoensgebonden. Bedragen in JSON/Excel
+  zijn numeriek (Excel rekent met doubles); de bron blijft exact `numeric`.
+- Geen PDF-export of grafiekafbeeldingen in Excel; alleen data-tabbladen.
+
+Bestanden: migraties `20261112203315_reporting.sql`, `…203410_reporting_monthly_fix.sql`,
+`…203419_reporting_detail_fix.sql`, `supabase/tests/reporting.test.sql`,
+`src/modules/reporting/*`, `src/app/account/dashboard/*`, CRM-schema/formulier/dossier/shell,
+accountpagina, `globals.css` (dashboardstijl), `scripts/test-reporting.mjs`,
+`tests/reporting-schema.test.ts`, e2e-route, package/lockfile, databasetypes, documentatie.
 
 ## Fase 6 — Financieel beheer
 
@@ -504,11 +557,11 @@ gepubliceerd of gedeployd; herstel in een nieuwe cloudtaak is niet getest.
 
 ## Open taken en volgende fase
 
-Fase 6 is lokaal geïmplementeerd. Echte pakketten, contracten, facturen en betalingen
-voert de commissie zelf in; die gegevens worden niet verzonnen. Fase 7 (Intern
-dashboard en rapportages) vereist een nieuwe opdracht en vooraf: gewenste KPI's,
-definitie 'actieve sponsor', seizoen/boekjaar voor periodes, welke cijfers het bestuur
-mag zien en gewenste exportformaten (CSV/Excel). Echte CRM-import blijft een aparte opdracht met proefvalidatie.
+Fase 7 is lokaal geïmplementeerd. Echte gegevens voert de commissie zelf in; ze worden
+niet verzonnen. Fase 8 (Persoonlijk sponsorportaal) vereist een nieuwe opdracht en vooraf:
+gewenste contactroute naar de commissie, welke bedrijfsgegevens sponsors mogen laten
+wijzigen (via verzoek), welke contract-/bewijs-/factuurvelden zichtbaar zijn en of
+sponsors zelf collega's mogen laten uitnodigen. Echte CRM-import blijft een aparte opdracht met proefvalidatie.
 Officieel logo, eerste echte Super Admin en productieconfiguratie blijven open;
 geen waarden of echte persoonsgegevens in Git opgeslagen.
 
@@ -523,3 +576,4 @@ geen waarden of echte persoonsgegevens in Git opgeslagen.
 | 2026-11-12 | 4 | CRM, meerdere contacten, interne privacy, prospectconversie, filters/archief en beperkte commissie-uitnodigingen. | D022–D026 |
 | 2026-11-12 | 5 | Pakketversies, contracten met regels/rechten, atomaire bevestiging, amendementen, verlenging/beëindiging, uitvoering met bewijs en private contractdocumenten; 380 DB-controles, 41 browsertests en echte contractflow. | D027–D032 |
 | 2026-11-12 | 6 | Facturen incl. 21% BTW, gatenvrije F/C-nummering, termijnen uit contracten, creditnota's met verrekening, handmatige betalingen met vergrendelde toewijzing, restitutie en factuur-PDF; 470 DB-controles, 46 browsertests en echte financiële flow. | D033–D038 |
+| 2026-11-12 | 7 | Dashboard met kerncijfers en drie grafieken per seizoen, CRM-vlag betalend, bestuurstoegang en Excel-export; 513 DB-controles, 47 browsertests en echte rapportageflow. | D039–D042 |

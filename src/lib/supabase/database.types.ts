@@ -564,14 +564,14 @@ isOneToOne: false
                   ]
                 },"sponsor_internal": {
                   Row: {
-                    "email": string | null,"kvk": string | null,"notes": string | null,"owner_id": string | null,"phone": string | null,"postal_code": string | null,"sponsor_id": string,"status": string,"street": string | null,"updated_at": string,"vat_number": string | null
+                    "email": string | null,"is_paying": boolean,"kvk": string | null,"notes": string | null,"owner_id": string | null,"phone": string | null,"postal_code": string | null,"sponsor_id": string,"status": string,"street": string | null,"updated_at": string,"vat_number": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "email"?: string | null,"kvk"?: string | null,"notes"?: string | null,"owner_id"?: string | null,"phone"?: string | null,"postal_code"?: string | null,"sponsor_id": string,"status"?: string,"street"?: string | null,"updated_at"?: string,"vat_number"?: string | null
+                    "email"?: string | null,"is_paying"?: boolean,"kvk"?: string | null,"notes"?: string | null,"owner_id"?: string | null,"phone"?: string | null,"postal_code"?: string | null,"sponsor_id": string,"status"?: string,"street"?: string | null,"updated_at"?: string,"vat_number"?: string | null
                   }
                   Update: {
-                    "email"?: string | null,"kvk"?: string | null,"notes"?: string | null,"owner_id"?: string | null,"phone"?: string | null,"postal_code"?: string | null,"sponsor_id"?: string,"status"?: string,"street"?: string | null,"updated_at"?: string,"vat_number"?: string | null
+                    "email"?: string | null,"is_paying"?: boolean,"kvk"?: string | null,"notes"?: string | null,"owner_id"?: string | null,"phone"?: string | null,"postal_code"?: string | null,"sponsor_id"?: string,"status"?: string,"street"?: string | null,"updated_at"?: string,"vat_number"?: string | null
                   }
                   Relationships: [
                     {
@@ -733,6 +733,9 @@ isOneToOne: false
 "issue_invoice":
 { Args: { "details": Json,"target": string }; Returns: string
                            },
+"log_report_export":
+{ Args: { "season": number }; Returns: undefined
+                           },
 "manage_sponsor_member":
 { Args: { "active": boolean,"company": string,"contact": string,"target": string }; Returns: undefined
                            },
@@ -759,6 +762,9 @@ isOneToOne: false
                            },
 "renew_contract":
 { Args: { "details": Json,"target": string }; Returns: string
+                           },
+"report_dashboard":
+{ Args: { "detailed"?: boolean,"season"?: number }; Returns: Json
                            },
 "retire_package_version":
 { Args: { "target": string }; Returns: undefined

@@ -69,6 +69,7 @@ for (const route of [
   "/account/contracten/50000000-0000-0000-0000-000000000001",
   "/account/sponsorrechten",
   "/account/financien",
+  "/account/dashboard",
   "/account/financien/facturen/nieuw",
   "/account/financien/facturen/50000000-0000-0000-0000-000000000001",
   "/account/financien/betalingen/nieuw",

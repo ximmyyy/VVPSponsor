@@ -5,8 +5,8 @@
 Dit is de functionele en technische projectbasis voor het nieuwe sponsorportaal van VV Pernis, een Nederlandse amateurvoetbalvereniging uit Rotterdam. Opdrachtgever is lid van de sponsorcommissie.
 
 - Laatst bijgewerkt: 2026-11-12.
-- Huidige fase: **6 — Financieel beheer**, lokaal geïmplementeerd en geverifieerd. Facturen (incl. BTW), gatenvrije nummering, termijnfacturatie uit contracten, creditnota's, handmatige betalingen met toewijzing, verrekening en restitutie werken.
-- Volgende fase: **7 — Intern dashboard en rapportages**, uitsluitend na een nieuwe opdracht. Vooraf nodig: gewenste KPI's, definitie actieve sponsor, periode/seizoen en exportformaten (zie §10).
+- Huidige fase: **7 — Intern dashboard en rapportages**, lokaal geïmplementeerd en geverifieerd. Dashboard met kerncijfers en grafieken per seizoen, bestuurstoegang en Excel-export werken.
+- Volgende fase: **8 — Persoonlijk sponsorportaal**, uitsluitend na een nieuwe opdracht. Vooraf nodig: contactroute, toegestane wijzigingsverzoeken, zichtbare contract-/bewijsvelden en beheer van gemachtigden (zie §10).
 - Alle onderstaande tabellen, routes, policies en processen zijn **ontwerp**, tenzij in `PROGRESS.md` expliciet als geïmplementeerd en geverifieerd vermeld.
 - `PROJECT.md` beschrijft scope, architectuur, bedrijfsregels, ontwerpkeuzes en acceptatiecriteria. `PROGRESS.md` bevat de gedetailleerde voortgang, controles, open taken en bekende problemen. `AGENTS.md` bevat blijvende werkinstructies.
 - Werk na iedere fase de faseaanduiding en belangrijke ontwerpbeslissingen hier bij; leg uitvoeringsdetails in `PROGRESS.md` vast. Ontwerp is geen bewijs van werkende functionaliteit.
@@ -246,6 +246,41 @@ en nog te factureren. Vastgestelde opdrachtgeverkeuzes: **prijzen incl. BTW, sta
   geregistreerde (niet-teruggedraaide) betalingen en actieve toewijzingen; nooit
   concepten. Bestuur krijgt financiële inzage pas via rapportages (fase 7). Mutaties
   in `private.finance_audit`.
+
+### Fase 7: dashboard en rapportages
+
+`/account/dashboard` (Super Admin, commissie én bestuur) met seizoenskeuze en
+Excel-export (`/account/dashboard/export?seizoen=JJJJ`). Vastgestelde opdrachtgeverkeuzes:
+
+- **Actieve sponsor** = in het CRM gemarkeerd als **betalend** (`sponsor_internal.is_paying`,
+  nieuw veld in het bedrijfsformulier) én relatiestatus **actief**, niet gearchiveerd.
+- **Seizoen** loopt van 1 juli t/m 30 juni; standaard het huidige seizoen (Europe/Amsterdam).
+- **Bestuur ziet alle cijfers**, maar alleen via de rapportage: geen interne notities,
+  contactpersonen, accountgegevens of directe toegang tot CRM-, contract- of financiële tabellen,
+  en geen interne navigatie of doorklikken naar dossiers.
+- **Export** in Excel (.xlsx) met tabbladen Samenvatting, Seizoenen, Sponsors, Contracten,
+  Facturen en Betalingen; euro- en datumopmaak, filters, vastgezette kop.
+
+Kerncijfers (alle bedragen incl. BTW): hero **budget actieve betalende sponsors** (contract-
+waarde van hun contracten naar rato van het seizoen), aantal actieve betalende sponsors,
+totale contractwaarde, gefactureerd (factuurdatum, minus credits), ontvangen (ontvangstdatum,
+minus terugbetalingen), openstaand en vervallen (peildatum), contracten die binnen 90 dagen
+aflopen zonder verlenging (+ waarde), opzegdatums binnen 60 dagen en prospects. Contract-
+waarde wordt per dag over seizoenen verdeeld; bij beëindiging tot de beëindigingsdatum.
+
+Grafieken (Recharts): seizoenen vergeleken (contractwaarde/gefactureerd/ontvangen, vijf
+seizoenen), cumulatief verloop per maand (stopt bij de huidige maand) en top-10 sponsors.
+Kleuren: clubblauw, cluboranje en aqua, gevalideerd op kleurenblindheid (adjacent CVD ΔE 10,6);
+aqua haalt geen 3:1 contrast, daarom altijd legenda, tooltip en een tabelweergave per grafiek.
+'Kansen' toont verlengkansen (aflopend binnen 180 dagen) en prospects; de echte
+acquisitiepipeline volgt in fase 9.
+
+Alle cijfers komen uit één begrensde `SECURITY DEFINER`-functie `report_dashboard(season,
+detailed)` met rolcontrole (Super Admin/commissie/bestuur, actief account), die de centrale
+views uit fase 5/6 hergebruikt; de app rekent geen eigen financiële waarheid. Exports worden
+gelogd in `private.report_exports` (wie, seizoen, tijd; geen inhoud). Tekst die als formule
+gelezen kan worden (=, +, -, @) krijgt in de export een apostrof; cellen zijn tekst, er staan
+geen formules in het bestand. Respons `private, no-store`.
 
 ## 2. Doel en productgrenzen
 
@@ -651,7 +686,7 @@ Deze punten blokkeren de initialisatie niet. Vraag ze op bij de relevante fase; 
 | Fase 4 | Voorlopige velden/statussen en duplicaatbeleid geïmplementeerd; echte bronadministratie/import niet aangeleverd of uitgevoerd. Wijzigingen in velden/duplicaatbeleid eerst beoordelen; import alleen na aparte opdracht en proefvalidatie. |
 | Fase 5 | Module gebouwd; nog aan te leveren: echte pakketten, prijzen, rechten, looptijden, voorwaarden en contracttemplates (invoer door de commissie zelf), wie uitvoering formeel goedkeurt (vier-ogen gewenst?), welk bewijs sponsoren mogen zien, en of contractnummering een bestaand formaat moet volgen. |
 | Fase 6 | Vastgesteld: incl. 21% BTW, F/C-nummering, handmatige vervaldatum, commissie + Super Admin. Nog open: seizoen/boekjaar voor rapportage, bestaande facturatiesoftware/export, of de vereniging voor alle sponsoring BTW-plichtig is (fiscaal advies), en welke bestuursoverzichten nodig zijn. |
-| Fase 7 | Gewenste KPI's, definitie actieve sponsor, periode-/seizoenfilters, rapportages en exportformaten. |
+| Fase 7 | Vastgesteld: kerncijfers (actieve betalende sponsors en budget, aflopende contracten, kansen), actieve sponsor = betalend + actief, seizoen juli–juni, bestuur alle cijfers, Excel. Nog open: eventuele extra KPI's en een echte pipeline (fase 9). |
 | Fase 8 | Gewenste sponsorcontactroute, toegestane wijzigingsverzoeken, zichtbare contract-/bewijsvelden en beheer van gemachtigden. |
 | Fase 9 | Pipelinefasen, taken-/herinneringsregels, evenementdoelgroepen, capaciteit, bedrijfs- of persoonsaanmelding, introducés, notificatiekanalen en afzender. |
 | Fase 10 | Per bedrijf toegestane publicatievelden/logo's en bewijs daarvan; openbare teksten, privacyverklaring, bewaartermijnen, clubcontactgegevens, domein/DNS, hostingbudget, beheer-/back-upverantwoordelijkheid en productieopdracht. |
@@ -704,6 +739,10 @@ Accounts en secrets via veilige provider-/omgevingsinstellingen aanleveren, niet
 | D036 | 2026-11-12 | Vastgelegd | Uitgereikte facturen onveranderlijk; correctie via creditnota (max. gefactureerd bedrag), automatische verrekening met de oorspronkelijke factuur, rest als tegoed voor verrekening of restitutie. Per contractregel niet meer factureren dan afgesproken. |
 | D037 | 2026-11-12 | Vastgelegd | Betalingen handmatig en los van facturen; N:M-toewijzing onder vergrendeling (betaling → factuur), onverdeeld bedrag zichtbaar, dubbele registratie alleen na expliciete bevestiging, terugdraaien append-only met reden. Geen bank-/boekhoudkoppeling (D010). |
 | D038 | 2026-11-12 | Voorlopig | Factuur-PDF wordt geüpload, niet gegenereerd. Bestuur krijgt financiële inzage pas via goedgekeurde rapportages (fase 7). |
+| D039 | 2026-11-12 | Vastgelegd door opdrachtgever | Actieve sponsor = CRM-vlag 'betalend' én relatiestatus actief (niet gearchiveerd). Rapportage per seizoen 1 juli – 30 juni. |
+| D040 | 2026-11-12 | Vastgelegd door opdrachtgever | Bestuur ziet alle cijfers van dashboard en export, uitsluitend via de begrensde rapportfunctie; geen notities, contactpersonen, accountgegevens of directe tabeltoegang. Export in Excel. |
+| D041 | 2026-11-12 | Vastgelegd | Contractwaarde per seizoen naar rato van looptijddagen (bij beëindiging tot beëindigingsdatum); gefactureerd op factuurdatum minus credits; ontvangen op ontvangstdatum minus terugbetalingen; openstaand/vervallen op peildatum. Alle bedragen incl. BTW. |
+| D042 | 2026-11-12 | Vastgelegd | Recharts 3.10.1 en ExcelJS 4.4.0 exact gepind; `uuid` binnen ExcelJS via npm-override op 11.1.1 (audit 0 kwetsbaarheden). Export zonder formules, formule-achtige tekst geneutraliseerd, exports gelogd. |
 
 ### Bronnen voor latere technische verificatie
 
@@ -746,4 +785,10 @@ Fase 6 is lokaal geverifieerd met 21 Node-tests, 470 databasecontroles (90 nieuw
 browserregressies, SQL-lint zonder bevindingen, de echte financiële integratieflow
 (`npm run test:finance`, inclusief parallelle toewijzingen) en geslaagde contract-,
 CRM- en authregressies. Alle 15 migraties en 470 controles werken op een nieuwe lege
-stack. Geen echte facturen/betalingen, boekhoudkoppeling of deployment. Fase 7 is niet gestart.
+stack. Geen echte facturen/betalingen, boekhoudkoppeling of deployment.
+
+Fase 7 is lokaal geverifieerd met 24 Node-tests, 513 databasecontroles (43 nieuw), 47
+browserregressies, SQL-lint zonder bevindingen, de echte rapportageflow (`npm run
+test:reporting`: dashboard, grafieken, Excel-download teruggelezen, bestuur/sponsor/anoniem)
+en geslaagde CRM-, contract-, financiële en authregressies. Alle 18 migraties en 513 controles
+werken op een nieuwe lege stack. Fase 8 is niet gestart.

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Brand } from "@/components/brand";
 import { Badge } from "@/components/ui/badge";
 const sections = [
+  ["/account/dashboard", "Dashboard"],
   ["/account/sponsors", "Sponsors"],
   ["/account/pakketten", "Pakketten"],
   ["/account/contracten", "Contracten"],
@@ -12,10 +13,16 @@ const sections = [
 export function CrmShell({
   children,
   current = "/account/sponsors",
+  boardOnly = false,
 }: {
   children: ReactNode;
   current?: (typeof sections)[number][0];
+  /** Bestuur ziet uitsluitend het dashboard; overige modules zijn intern. */
+  boardOnly?: boolean;
 }) {
+  const visible = boardOnly
+    ? sections.filter(([href]) => href === "/account/dashboard")
+    : sections;
   return (
     <div className="min-h-screen bg-background">
       <a href="#inhoud" className="skip-link">
@@ -30,7 +37,7 @@ export function CrmShell({
             className="flex flex-wrap gap-x-5 text-sm"
             aria-label="Accountnavigatie"
           >
-            {sections.map(([href, label]) => (
+            {visible.map(([href, label]) => (
               <Link
                 key={href}
                 href={href}
@@ -44,7 +51,7 @@ export function CrmShell({
               Mijn account
             </Link>
           </nav>
-          <Badge>Intern CRM</Badge>
+          <Badge>{boardOnly ? "Bestuur" : "Intern CRM"}</Badge>
         </div>
       </header>
       <main id="inhoud" tabIndex={-1} className="crm-width py-9">

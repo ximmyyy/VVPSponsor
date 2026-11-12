@@ -95,6 +95,7 @@ export default async function Detail({
                     : "Niet toegewezen"),
               ],
               ["Relatiestatus", statusLabels[values.status]],
+              ["Betalende sponsor", values.is_paying ? "Ja" : "Nee"],
               ["KvK-nummer", values.kvk],
               ["BTW-nummer", values.vat_number],
               [

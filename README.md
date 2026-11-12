@@ -1,8 +1,8 @@
 # VV Pernis Sponsorportaal
 
-Technische basis voor één modulaire Next.js-app met Supabase. Fases 1–6 zijn lokaal geïmplementeerd: technische basis, layouts, authenticatie,
-sponsor-CRM, pakketten/contracten/sponsorrechten en financieel beheer. Rapportages,
-het sponsorportaal en publieke sponsorinhoud volgen later.
+Technische basis voor één modulaire Next.js-app met Supabase. Fases 1–7 zijn lokaal geïmplementeerd: technische basis, layouts, authenticatie,
+sponsor-CRM, pakketten/contracten/sponsorrechten, financieel beheer en het dashboard
+met rapportages. Het sponsorportaal en publieke sponsorinhoud volgen later.
 Lees bij ontwikkeling eerst [PROJECT.md](PROJECT.md), [PROGRESS.md](PROGRESS.md)
 en [AGENTS.md](AGENTS.md). Gebruik de bestaande checkout; een cloudtaak is al geïsoleerd.
 
@@ -281,8 +281,8 @@ toegekend; de vervaldatum vul je altijd zelf in.
 
 ```sh
 npm run db:migrate && npm run db:types
-npm run db:test          # 470 controles
-npm test                 # 21 tests
+npm run db:test          # 470 controles (fase 6)
+npm test                 # 21 tests (fase 6)
 npm run dev
 # Tweede terminal; niet parallel met andere integratiescripts:
 npm run test:finance
@@ -292,3 +292,23 @@ npm run test:finance
 integratietests gaten in de nummertellers achter (fixtures worden opgeruimd,
 tellers niet); dat speelt alleen in de lokale ontwikkeldatabase. Stop de devserver
 voor `npm run test:e2e` (46 tests).
+
+## Fase 7: dashboard en rapportages
+
+**Dashboard** (ook voor het bestuur, via `/account` → *Dashboard en rapportages*) toont per
+seizoen (1 juli – 30 juni) het budget van actieve betalende sponsors, kerncijfers,
+grafieken, binnenkort aflopende contracten en prospects. Een sponsor telt als actief
+wanneer je in het CRM **Betalende sponsor** aanvinkt én de relatiestatus **Actief** is.
+**Exporteer naar Excel** levert een .xlsx met samenvatting, seizoenen, sponsors,
+contracten, facturen en betalingen. Elke export wordt gelogd.
+
+```sh
+npm run db:migrate && npm run db:types
+npm run db:test          # 513 controles
+npm test                 # 24 tests
+npm run dev
+# Tweede terminal; niet parallel met andere integratiescripts:
+npm run test:reporting
+```
+
+Stop daarna de devserver voor `npm run test:e2e` (47 tests).

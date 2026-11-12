@@ -141,6 +141,10 @@ export function CompanyForm({
             <option value="inactive">Inactief</option>
           </select>
         </div>
+        <label className="flex min-h-11 items-center gap-3 self-end text-sm">
+          <input type="checkbox" {...register("is_paying")} /> Betalende sponsor
+          (telt mee als actieve sponsor bij relatiestatus Actief)
+        </label>
         <div>
           <label htmlFor="company-owner" className="block text-sm font-medium">
             Verantwoordelijke

@@ -37,6 +37,8 @@ export const companySchema = z.object({
   phone: text(40),
   notes: text(10000),
   owner_id: z.union([z.uuid(), z.literal("")]),
+  // Fase 7: samen met relatiestatus 'actief' de definitie van actieve sponsor.
+  is_paying: z.boolean(),
 });
 export type CompanyInput = z.infer<typeof companySchema>;
 export const blankCompany: CompanyInput = {
@@ -53,6 +55,7 @@ export const blankCompany: CompanyInput = {
   phone: "",
   notes: "",
   owner_id: "",
+  is_paying: false,
 };
 export const contactSchema = z.object({
   name: text(160).min(1, "Vul de naam in."),

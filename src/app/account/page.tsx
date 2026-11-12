@@ -33,6 +33,13 @@ export default async function Account() {
             Bedrijf: {company.name}
           </p>
         ))}
+        {["super_admin", "sponsorcommissie", "clubbestuur"].includes(
+          access.role,
+        ) && (
+          <Link href="/account/dashboard" className="my-6 block underline">
+            Dashboard en rapportages
+          </Link>
+        )}
         {["super_admin", "sponsorcommissie"].includes(access.role) && (
           <>
             <Link href="/account/sponsors" className="my-6 block underline">
