@@ -25,7 +25,7 @@ export function PortalNav({ contact }: { contact: string | null }) {
   return (
     <nav
       aria-label="Sponsorportaal"
-      className="crm-width -mb-px flex gap-1 overflow-x-auto pb-1 text-sm"
+      className="crm-width flex gap-1 overflow-x-auto text-sm"
     >
       {sections.map(([href, label]) => (
         <Link

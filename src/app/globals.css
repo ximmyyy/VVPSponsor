@@ -5,6 +5,8 @@
   --brand-primary: #045ea7;
   --brand-primary-dark: #034a85;
   --brand-accent: #ea751d;
+  --brand-tint: #e8f1f9;
+  --brand-accent-tint: #fdf0e4;
   --background: #f4f6f9;
   --foreground: #142b43;
   --card: #fff;
@@ -63,8 +65,11 @@ button:not(:disabled),
 a {
   cursor: pointer;
 }
-a {
-  text-decoration: none;
+/* In de basislaag, zodat Tailwind-utilities zoals `underline` op links blijven werken. */
+@layer base {
+  a {
+    text-decoration: none;
+  }
 }
 :where(a, button, [tabindex]):focus-visible {
   outline: 3px solid var(--ring);
@@ -890,14 +895,21 @@ a {
   text-align: left;
 }
 .table-scroll th {
-  background: var(--background);
+  background: var(--brand-tint);
+  color: var(--brand-primary-dark);
   font-size: 0.72rem;
-  padding: 1rem 1.4rem;
+  letter-spacing: 0.02em;
+  padding: 0.8rem 1.4rem;
+  border-bottom: 2px solid var(--brand-primary);
 }
 .table-scroll td {
   font-size: 0.8rem;
   color: var(--muted-foreground);
-  padding: 2rem 1.4rem;
+  padding: 0.85rem 1.4rem;
+  border-top: 1px solid var(--border);
+}
+.table-scroll tbody tr:hover td {
+  background: #f7fafd;
 }
 .state-page {
   padding-block: 5rem;
@@ -1206,7 +1218,12 @@ a {
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
 }
 .dash-hero {
-  background: linear-gradient(135deg, var(--brand-primary-dark) 0%, var(--brand-primary) 65%, #1a6fb8 100%);
+  background: linear-gradient(
+    135deg,
+    var(--brand-primary-dark) 0%,
+    var(--brand-primary) 65%,
+    #1a6fb8 100%
+  );
   border-bottom: 4px solid var(--brand-accent);
   color: #fff;
   border-radius: 0.75rem;
@@ -1322,7 +1339,7 @@ a {
   display: flex;
   align-items: center;
   cursor: pointer;
-  color: var(--primary);
+  color: var(--brand-primary);
   text-decoration: underline;
 }
 .dash-num {
@@ -1352,27 +1369,174 @@ a {
   color: #8a1c1c;
 }
 
-/* Fase 8: sponsorportaal. */
+/* Fase 8: sponsorportaal. Tabs staan op de clubblauwe kop. */
 .portal-tab {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
   padding: 0 0.75rem;
   white-space: nowrap;
-  border-bottom: 2px solid transparent;
-  color: var(--foreground);
+  border-bottom: 3px solid transparent;
+  color: #dbe8f4;
 }
 .portal-tab:hover {
-  color: var(--primary);
-  border-bottom-color: var(--border);
+  color: #fff;
+  border-bottom-color: #ffffff66;
 }
 .portal-tab[aria-current="page"] {
-  color: var(--primary);
+  color: #fff;
   font-weight: 600;
-  border-bottom-color: var(--primary);
+  border-bottom-color: var(--brand-accent);
 }
-
-/* Clubaccent: oranje lijn uit het logo boven de app-koppen (decoratief, geen tekst). */
+/* Clubkleuren: blauwe app-kop met oranje lijn uit het logo. */
 .brand-header {
-  border-top: 4px solid var(--brand-accent);
+  background: linear-gradient(
+    100deg,
+    var(--brand-primary-dark) 0%,
+    var(--brand-primary) 70%
+  );
+  border-bottom: 4px solid var(--brand-accent);
+  color: #fff;
+}
+.brand-header :focus-visible {
+  outline-color: #fff;
+}
+.brand-header [data-slot="badge"] {
+  background: #ffffff1f;
+  border-color: #ffffff4d;
+  color: #fff;
+}
+.app-nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #dbe8f4;
+  border-bottom: 3px solid transparent;
+}
+.app-nav-link:hover {
+  color: #fff;
+  border-bottom-color: #ffffff66;
+}
+.app-nav-link[aria-current="page"] {
+  color: #fff;
+  font-weight: 600;
+  border-bottom-color: var(--brand-accent);
+}
+.app-footer {
+  border-top: 3px solid var(--brand-primary);
+}
+/* Links in de inhoud: clubblauw; op blauwe vlakken erven ze de tekstkleur. */
+main a.underline {
+  color: var(--brand-primary);
+  text-underline-offset: 3px;
+}
+main a.underline:hover {
+  color: var(--brand-primary-dark);
+  text-decoration-thickness: 2px;
+}
+.dash-hero a.underline,
+.account-hero a.underline {
+  color: inherit;
+}
+::selection {
+  background: #fbd9bd;
+  color: #142b43;
+}
+/* Paginakoppen: oranje streepje vóór de eyebrow in de app. */
+main .eyebrow::before {
+  content: "";
+  width: 1.4rem;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--brand-accent);
+}
+.dash-tile {
+  border-top: 3px solid var(--brand-primary);
+}
+.dash-tile:nth-child(even) {
+  border-top-color: var(--brand-accent);
+}
+.dash-tile-label svg {
+  color: var(--brand-primary);
+}
+.dash-panel h2 {
+  color: var(--brand-primary-dark);
+}
+/* Statuslabels in clubkleuren (tekst ≥ 4,5:1 op de tint). */
+[data-slot="badge"][data-tone="positive"] {
+  background: var(--brand-tint);
+  border-color: #b9d3ea;
+  color: var(--brand-primary-dark);
+}
+[data-slot="badge"][data-tone="attention"] {
+  background: var(--brand-accent-tint);
+  border-color: #f3c9a3;
+  color: #7a3a06;
+}
+[data-slot="badge"][data-tone="danger"] {
+  background: #fdecec;
+  border-color: #f1b5b5;
+  color: #8a1c1c;
+}
+/* Accountoverzicht. */
+.account-hero {
+  background: linear-gradient(
+    120deg,
+    var(--brand-primary-dark) 0%,
+    var(--brand-primary) 70%,
+    #1a6fb8 100%
+  );
+  border-bottom: 4px solid var(--brand-accent);
+  border-radius: 0.75rem;
+  color: #fff;
+  padding: 1.75rem;
+}
+.account-hero p {
+  color: #e3ecf6;
+}
+.account-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+}
+.account-card {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  min-height: 44px;
+  padding: 1.1rem 1.2rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--brand-primary);
+  border-radius: 0.75rem;
+  color: var(--foreground);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.account-card:hover {
+  border-left-color: var(--brand-accent);
+  box-shadow: 0 6px 18px rgba(4, 94, 167, 0.12);
+}
+.account-card svg {
+  flex: none;
+  color: var(--brand-primary);
+  margin-top: 0.1rem;
+}
+.account-card strong {
+  display: block;
+  font-size: 0.95rem;
+}
+.account-card span {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+}
+.login-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--brand-primary);
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 30px rgba(4, 94, 167, 0.08);
 }

@@ -4,7 +4,7 @@
 
 Dit is de functionele en technische projectbasis voor het nieuwe sponsorportaal van VV Pernis, een Nederlandse amateurvoetbalvereniging uit Rotterdam. Opdrachtgever is lid van de sponsorcommissie.
 
-- Laatst bijgewerkt: 2026-11-12.
+- Laatst bijgewerkt: 2026-11-13.
 - Huidige stand: fases 1–8 lokaal geïmplementeerd en geverifieerd, plus **testgereedheid**: officieel logo en logokleuren, en performance-optimalisatie gemeten op een productiebuild met volumedata.
 - **Fase 9 (acquisitie, evenementen, notificaties/mailing) staat op verzoek van de opdrachtgever op pauze** (D047). Niet starten zonder nieuwe opdracht.
 - **Testomgeving staat live** (D051): https://vvp-sponsorportaal-test.vercel.app met Supabase-project `vvp-sponsorportaal-test` (Frankfurt). Geen productie; geen echte gegevens; geen SMTP.
@@ -808,6 +808,8 @@ Accounts en secrets via veilige provider-/omgevingsinstellingen aanleveren, niet
 | D049 | 2026-11-12 | Vastgelegd | Sponsor-RLS via `sponsor_id = (select private.current_sponsor())` (InitPlan) i.p.v. per-rij-helper; semantisch gelijk, getest met de volledige beveiligingssuite. |
 | D050 | 2026-11-12 | Vastgelegd | Proxy: `getClaims()` voor sessieverversing; pagina's: `getUser()` + DB-autorisatie, gecachet per request. Performance-regressie via `npm run test:perf` op een productiebuild. |
 | D051 | 2026-11-12 | Vastgelegd door opdrachtgever | Testomgeving: Supabase-project `vvp-sponsorportaal-test` (eu-central-1) met alle 22 migraties (schema aantoonbaar identiek aan lokaal), Vercel-project `vvp-sponsorportaal-test` (fra1, Node 24, `APP_ENV=staging`). Geen SMTP en geen `SUPABASE_SECRET_KEY` op Vercel: uitnodigen per mail staat uit; testaccounts via Supabase-dashboard. Registratie uit, wachtwoord ≥ 12, MFA aan. |
+| D052 | 2026-11-13 | Vastgelegd door opdrachtgever | Echte sponsorgegevens in de testomgeving: op uitdrukkelijke opdracht is het sponsoroverzicht 2025-2026 (Excel, stand 09-03-2026) geïmporteerd als huidige sponsors; het rood gemarkeerde (oude) deel is overgeslagen. Import liep via de bestaande RPC's in naam van de Super Admin (rolcontrole, audit, momentopname). Contracten staan op seizoen 2026-2027 met het jaarbedrag uit het overzicht en zonder BTW-tarief; looptijd/einddatum uit het overzicht staan alleen als interne notitie. Brondata en importbestanden staan niet in de repository. Hiermee vervalt voor deze omgeving de regel 'alleen TEST-gegevens'; privacyverklaring, bewaartermijnen en verwerkersafspraken blijven vóór productie nodig. |
+| D053 | 2026-11-13 | Vastgelegd | Huisstijl: app-koppen in clubblauw met oranje lijn, statuslabels met toon (blauw = positief, oranje = aandacht, rood = probleem; altijd met tekst), tabelkoppen in blauwe tint, accountpagina als overzicht met kaarten. Basisregel voor links staat in de CSS-basislaag zodat utilities (`underline`) werken. |
 
 ### Bronnen voor latere technische verificatie
 

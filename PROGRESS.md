@@ -2,7 +2,7 @@
 
 ## Actuele stand
 
-- Laatst bijgewerkt: **2026-11-12**.
+- Laatst bijgewerkt: **2026-11-13**.
 - Fase **0 — Initialisatie**: afgerond.
 - Fase **1 — Projectarchitectuur en database**: geïmplementeerd en lokaal geverifieerd.
 - Fase **2 — Design en navigatie**: afgerond en lokaal geverifieerd.
@@ -19,7 +19,7 @@
 - Er werkt een technische Next.js-basis met minimale lokale database. Er werken nu
   login, gecontroleerde uitnodigingen en een private Storage-basis. Er is nog geen
   volledige sponsoradministratie of deployment. De startpagina meldt dit expliciet.
-- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D050. Werkinstructies:
+- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D053. Werkinstructies:
   [AGENTS.md](AGENTS.md). Installatie/start: [README.md](README.md).
 
 ## Fasestatus
@@ -65,8 +65,65 @@ Opdracht: Supabase en Vercel via de gekoppelde connectors, SMTP voorlopig niet n
   bijgewerkt via een nieuwe productie-deployment. Productiebranch van Vercel is `main`.
 - Supabase-token voor de Management API staat als netwerkgeheim in de standaardomgeving van
   deze cloudsessies; intrekken in Supabase (Account → Access Tokens) na afloop van de test.
-- Geen echte sponsorgegevens invoeren zolang privacyverklaring, bewaartermijnen en
+- Sinds 2026-11-13 bevat de testomgeving op opdracht echte sponsorgegevens (D052). Verder geen
+  echte gegevens toevoegen zolang privacyverklaring, bewaartermijnen en
   verwerkersafspraken niet zijn vastgesteld; gebruik herkenbare TEST-gegevens.
+
+## Import sponsoroverzicht, codecontrole en clubkleuren (2026-11-13)
+
+Opdracht: sponsoroverzicht 2025-2026 uitlezen en als huidige sponsors toevoegen (rood = oud,
+overslaan), de site controleren op fouten in code en stijl, meer clubkleuren toepassen.
+
+### Import (testomgeving, D052)
+
+- Bron: één werkblad; 45 actuele regels (44 bedrijven, één bedrijf met twee pakketten), plus
+  lijsten Sportweekend, 7x7, Jeugdtoernooi en kledingsponsors. 20 rode regels overgeslagen.
+- Resultaat (geteld in de database na de import): 65 bedrijven (alle 'actief'), 40 gemarkeerd als
+  betalend (bedrag > 0 in de hoofdlijst), 44 contactpersonen, 44 bevestigde contracten
+  `SC-2026-0001`–`SC-2026-0044` met 45 regels en 103 sponsorrechten; contractwaarde € 27.100.
+  Dashboard seizoen 2026/27: 40 betalende sponsors, budget € 27.100.
+- Werkwijze: eerst lokaal proefgedraaid in een teruggedraaide transactie, daarna één transactie op
+  de testomgeving via `save_sponsor`, `save_sponsor_contact`, `create_contract`,
+  `add_contract_line`, `add_contract_right`, `confirm_contract` als Super Admin; 475 auditregels.
+- Aannames (te controleren door de commissie): contractperiode 01-07-2026 t/m 30-06-2027; bedrag
+  als jaarbedrag zonder BTW-tarief; borden/bal/vlag/banier/belettering als sponsorrecht met status
+  open; bedrijven uit de lijsten Sportweekend/7x7/Jeugdtoernooi/kleding zonder contract, met
+  interne notitie en niet als betalend gemarkeerd.
+- Niet overgenomen: kolom Gefactureerd (geen facturen aangemaakt), celkleuren anders dan rood
+  (betekenis onbekend), een losse contactregel zonder bedrijf. De totaalcel in het bestand
+  (€ 28.960) wijkt af van de som van de regels (€ 27.100).
+- Mogelijke dubbelen, bewust niet samengevoegd: Verschoor vof / Verschoor dakbedekking,
+  Stelle BV Apotheek / Apotheek pernis. Wel samengevoegd op naam: Van der Pols, Ketting
+  Financieel advies, BNB Administraties, IBS.
+
+### Codecontrole
+
+Gelezen: stylesheet, shells en gedeelde componenten, proxy, auth, alle server-actions en schema's
+van CRM, contracten, financiën en rapportage, document- en exportroutes. Pagina's zijn beoordeeld
+op schermafbeeldingen (1440 en 390 px) met fictieve volumedata; portaal-actions en de afzonderlijke
+paginabestanden zijn niet regel voor regel gelezen. Gevonden en opgelost:
+
+- Links met `underline` kregen nooit een onderstreping: een niet-gelaagde `a { text-decoration:
+  none }` won van de Tailwind-utilities (69 links zagen eruit als gewone tekst).
+- `var(--primary)` bestond niet: actieve portaaltab en 'Toon als tabel' hadden geen clubkleur.
+- Tabelrijen hadden 2 rem celpadding (bedoeld voor lege staten): lijsten waren onnodig lang.
+- `/account` toonde de publieke kop met 'Inloggen' terwijl de gebruiker al was ingelogd.
+- Hover op outline-/ghost-knoppen was vol oranje; nu een rustige tint.
+- Geen fouten gevonden in autorisatie, validatie of geldlogica van de gelezen modules.
+
+### Clubkleuren (D053)
+
+Blauwe app-kop met oranje lijn (intern, portaal, account), wit logo-opschrift, oranje actieve
+navigatie, statuslabels met toon, blauwe tabelkoppen, tegels met blauw/oranje bovenrand, oranje
+streepje bij paginakoppen, accountoverzicht met kaarten, inlogkaart, blauwe voetlijn.
+
+### Controles
+
+- `npm run lint`, typecheck: groen. `npm test`: 28/28. `npm run db:test`: 571/571.
+- `npm run test:e2e`: 54/55; de skiplinktest op `/beheer` (mobiel) faalde één keer en bij herhaling
+  1 op 6. Die pagina is niet gewijzigd; vermoedelijk timing (Tab vóór hydratatie), niet opgelost.
+- Integratieflows op een productiebuild: auth, crm, contracts, finance, reporting, portal geslaagd
+  (na aanpassing van de toegankelijke naam van de accountkaarten).
 
 ## Testgereedheid — logo, kleuren en performance
 
@@ -722,3 +779,4 @@ geen waarden of echte persoonsgegevens in Git opgeslagen.
 | 2026-11-12 | 8 | Persoonlijk sponsorportaal: overzicht, samenwerking (huidig + eerder), facturen, wijzigingsverzoeken met commissiebeoordeling, contact via e-mail, collega's uitnodigen/intrekken; 571 DB-controles, 55 browsertests en mobiele flow. | D043–D046 |
 | 2026-11-12 | 9/10 | Fase 9 op pauze. Testgereedheid: officieel logo en logokleuren, sponsor-RLS en rapportage geoptimaliseerd (tot 200× sneller), Auth één keer per verzoek, meetscript `test:perf`; alle flows op productiebuild groen. | D047–D050 |
 | 2026-11-12 | 10 | Testomgeving live: Supabase (22 migraties, schema identiek) en Vercel-productie-deployment, Auth ingesteld, live rooktest geslaagd. | D051 |
+| 2026-11-13 | 10 | Sponsoroverzicht 2025-2026 geïmporteerd in de testomgeving (65 bedrijven, 44 contracten, € 27.100); codecontrole met vijf stijlfouten opgelost; clubkleuren doorgevoerd. | D052–D053 |

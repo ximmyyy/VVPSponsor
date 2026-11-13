@@ -18,7 +18,7 @@ export function AuthForm({
         <label className="block text-sm font-medium">
           E-mailadres
           <input
-            className="mt-2 block w-full rounded-md border border-border p-3"
+            className="crm-input"
             name="email"
             type="email"
             autoComplete="email"
@@ -31,7 +31,7 @@ export function AuthForm({
         <label className="block text-sm font-medium">
           Wachtwoord
           <input
-            className="mt-2 block w-full rounded-md border border-border p-3"
+            className="crm-input"
             name="password"
             type="password"
             autoComplete={
@@ -47,7 +47,7 @@ export function AuthForm({
         <label className="block text-sm font-medium">
           Herhaal wachtwoord
           <input
-            className="mt-2 block w-full rounded-md border border-border p-3"
+            className="crm-input"
             name="confirmation"
             type="password"
             autoComplete="new-password"

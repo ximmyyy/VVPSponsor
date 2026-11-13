@@ -29,10 +29,10 @@ export function CrmShell({
       <a href="#inhoud" className="skip-link">
         Direct naar inhoud
       </a>
-      <header className="brand-header border-b border-border bg-white">
+      <header className="brand-header">
         <div className="crm-width flex flex-wrap items-center justify-between gap-4 py-5">
           <Link href="/account" aria-label="Naar mijn account">
-            <Brand />
+            <Brand inverse />
           </Link>
           <nav
             className="flex flex-wrap gap-x-5 text-sm"
@@ -43,12 +43,12 @@ export function CrmShell({
                 key={href}
                 href={href}
                 aria-current={current === href ? "page" : undefined}
-                className={`inline-flex min-h-11 items-center ${current === href ? "font-semibold text-primary underline underline-offset-4" : ""}`}
+                className="app-nav-link"
               >
                 {label}
               </Link>
             ))}
-            <Link href="/account" className="inline-flex min-h-11 items-center">
+            <Link href="/account" className="app-nav-link">
               Mijn account
             </Link>
           </nav>
@@ -58,7 +58,7 @@ export function CrmShell({
       <main id="inhoud" tabIndex={-1} className="crm-width py-9">
         {children}
       </main>
-      <footer className="crm-width border-t border-border py-6 text-xs text-muted-foreground">
+      <footer className="crm-width app-footer py-6 text-xs text-muted-foreground">
         VV Pernis · Sponsorrelaties · Alleen bevoegde interne gebruikers
       </footer>
     </div>

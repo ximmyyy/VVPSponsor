@@ -18,13 +18,13 @@ export function PortalShell({
       <a href="#inhoud" className="skip-link">
         Direct naar inhoud
       </a>
-      <header className="brand-header border-b border-border bg-white">
+      <header className="brand-header">
         <div className="crm-width flex flex-wrap items-center justify-between gap-3 py-4">
           <Link
             href="/account/portaal"
             aria-label="Naar het overzicht van mijn sponsorportaal"
           >
-            <Brand />
+            <Brand inverse />
           </Link>
           <Badge className="max-w-full truncate">{company}</Badge>
         </div>
@@ -33,7 +33,7 @@ export function PortalShell({
       <main id="inhoud" tabIndex={-1} className="crm-width py-8">
         {children}
       </main>
-      <footer className="crm-width border-t border-border py-6 text-xs text-muted-foreground">
+      <footer className="crm-width app-footer py-6 text-xs text-muted-foreground">
         VV Pernis · Persoonlijk sponsorportaal · Je ziet uitsluitend gegevens
         van je eigen bedrijf
       </footer>

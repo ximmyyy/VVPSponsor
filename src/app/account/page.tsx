@@ -1,8 +1,32 @@
 import Link from "next/link";
+import {
+  BarChart3,
+  Building2,
+  FileSignature,
+  Handshake,
+  Inbox,
+  type LucideIcon,
+  Package,
+  Settings,
+  ShieldCheck,
+  Trophy,
+  UserPlus,
+  Wallet,
+} from "lucide-react";
 import { requireAccess } from "@/modules/auth/context";
 import { logout } from "@/modules/auth/actions";
-import { PublicShell } from "@/components/public-shell";
+import { Brand } from "@/components/brand";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+
+const roleLabels = {
+  super_admin: "Super Admin",
+  sponsorcommissie: "Sponsorcommissie",
+  clubbestuur: "Clubbestuur",
+  sponsor: "Sponsor",
+} as const;
+type Item = [href: string, title: string, text: string, icon: LucideIcon];
+
 export default async function Account() {
   const { client, user, access } = await requireAccess();
   const { data: companies } =
@@ -12,75 +36,139 @@ export default async function Account() {
           .select("id,name")
           .eq("id", access.sponsor_id!)
       : { data: null };
+  const internal = ["super_admin", "sponsorcommissie"].includes(access.role);
+  const items: Item[] = [
+    ...(access.role === "sponsor"
+      ? ([
+          [
+            "/account/portaal",
+            "Naar mijn sponsorportaal",
+            "Samenwerking, sponsorrechten en facturen van je bedrijf.",
+            Handshake,
+          ],
+        ] satisfies Item[])
+      : []),
+    ...(internal || access.role === "clubbestuur"
+      ? ([
+          [
+            "/account/dashboard",
+            "Dashboard en rapportages",
+            "Kerncijfers per seizoen en export naar Excel.",
+            BarChart3,
+          ],
+        ] satisfies Item[])
+      : []),
+    ...(internal
+      ? ([
+          [
+            "/account/sponsors",
+            "Sponsors beheren",
+            "Bedrijven, contactpersonen en relatiestatus.",
+            Building2,
+          ],
+          [
+            "/account/contracten",
+            "Contracten en sponsorrechten",
+            "Afspraken, looptijden en amendementen.",
+            FileSignature,
+          ],
+          [
+            "/account/sponsorrechten",
+            "Sponsorrechten",
+            "Uitvoering en deadlines van tegenprestaties.",
+            Trophy,
+          ],
+          [
+            "/account/pakketten",
+            "Sponsorpakketten",
+            "Pakketten en versies met standaardrechten.",
+            Package,
+          ],
+          [
+            "/account/financien",
+            "Financiën",
+            "Facturen, creditnota's en ontvangen betalingen.",
+            Wallet,
+          ],
+          [
+            "/account/verzoeken",
+            "Verzoeken",
+            "Wijzigingsverzoeken vanuit het sponsorportaal.",
+            Inbox,
+          ],
+        ] satisfies Item[])
+      : []),
+    ...(access.role === "super_admin"
+      ? ([
+          [
+            "/account/gebruikers",
+            "Gebruiker uitnodigen",
+            "Toegang geven aan commissie, bestuur of sponsor.",
+            UserPlus,
+          ],
+          [
+            "/account/instellingen",
+            "Clubinstellingen (contactadres portaal)",
+            "Het e-mailadres dat sponsors in het portaal zien.",
+            Settings,
+          ],
+        ] satisfies Item[])
+      : []),
+    [
+      "/account/beveiliging",
+      "Extra accountbeveiliging",
+      "Tweestapsverificatie met een authenticator-app.",
+      ShieldCheck,
+    ],
+  ];
   return (
-    <PublicShell>
-      <section className="public-width state-page">
-        <h1 className="text-3xl font-semibold">Je account</h1>
-        <p className="my-4">Ingelogd als {user.email}</p>
-        <p>
-          Rol:{" "}
-          {
-            {
-              super_admin: "Super Admin",
-              sponsorcommissie: "Sponsorcommissie",
-              clubbestuur: "Clubbestuur",
-              sponsor: "Sponsor",
-            }[access.role]
-          }
-        </p>
-        {access.role === "sponsor" && (
-          <Link
-            href="/account/portaal"
-            className="my-6 inline-flex min-h-11 items-center rounded-md bg-primary px-4 font-medium text-primary-foreground"
-          >
-            Naar mijn sponsorportaal
+    <div className="min-h-screen bg-background">
+      <a href="#inhoud" className="skip-link">
+        Direct naar inhoud
+      </a>
+      <header className="brand-header">
+        <div className="crm-width flex flex-wrap items-center justify-between gap-4 py-5">
+          <Link href="/account" aria-label="Naar mijn account">
+            <Brand inverse />
           </Link>
-        )}
-        {companies?.map((company) => (
-          <p key={company.id} className="my-4">
-            Bedrijf: {company.name}
-          </p>
-        ))}
-        {["super_admin", "sponsorcommissie", "clubbestuur"].includes(
-          access.role,
-        ) && (
-          <Link href="/account/dashboard" className="my-6 block underline">
-            Dashboard en rapportages
-          </Link>
-        )}
-        {["super_admin", "sponsorcommissie"].includes(access.role) && (
-          <>
-            <Link href="/account/sponsors" className="my-6 block underline">
-              Sponsors beheren
+          <Badge>{roleLabels[access.role]}</Badge>
+        </div>
+      </header>
+      <main id="inhoud" tabIndex={-1} className="crm-width py-9">
+        <section className="account-hero">
+          <h1 className="text-3xl font-semibold">Je account</h1>
+          <p className="mt-3 break-all">Ingelogd als {user.email}</p>
+          <p className="mt-1">Rol: {roleLabels[access.role]}</p>
+          {companies?.map((company) => (
+            <p key={company.id} className="mt-1 break-words">
+              Bedrijf: {company.name}
+            </p>
+          ))}
+        </section>
+        <nav aria-label="Onderdelen" className="account-grid mt-6">
+          {items.map(([href, title, text, Icon], i) => (
+            <Link
+              key={href}
+              href={href}
+              className="account-card"
+              aria-labelledby={`onderdeel-${i}`}
+              aria-describedby={`onderdeel-${i}-uitleg`}
+            >
+              <Icon className="size-5" aria-hidden="true" />
+              <div>
+                <strong id={`onderdeel-${i}`}>{title}</strong>
+                <span id={`onderdeel-${i}-uitleg`}>{text}</span>
+              </div>
             </Link>
-            <Link href="/account/contracten" className="my-6 block underline">
-              Contracten en sponsorrechten
-            </Link>
-            <Link href="/account/pakketten" className="my-6 block underline">
-              Sponsorpakketten
-            </Link>
-            <Link href="/account/financien" className="my-6 block underline">
-              Financiën
-            </Link>
-          </>
-        )}
-        {access.role === "super_admin" && (
-          <>
-            <Link href="/account/gebruikers" className="my-6 block underline">
-              Gebruiker uitnodigen
-            </Link>
-            <Link href="/account/instellingen" className="my-6 block underline">
-              Clubinstellingen (contactadres portaal)
-            </Link>
-          </>
-        )}
-        <Link href="/account/beveiliging" className="my-6 block underline">
-          Extra accountbeveiliging
-        </Link>
-        <form action={logout}>
-          <Button>Uitloggen</Button>
+          ))}
+        </nav>
+        <form action={logout} className="mt-8">
+          <Button variant="outline">Uitloggen</Button>
         </form>
-      </section>
-    </PublicShell>
+      </main>
+      <footer className="crm-width app-footer py-6 text-xs text-muted-foreground">
+        VV Pernis · Sponsorportaal
+      </footer>
+    </div>
   );
 }

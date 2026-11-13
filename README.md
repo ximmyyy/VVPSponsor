@@ -368,4 +368,4 @@ Vercel-preview (zie `PROGRESS.md`, open taken).
 - App: https://vvp-sponsorportaal-test.vercel.app (Vercel-project `vvp-sponsorportaal-test`)
 - Database: Supabase-project `vvp-sponsorportaal-test` (Frankfurt), alle migraties toegepast.
 - Geen SMTP: accounts aanmaken in het Supabase-dashboard en daarna een rol toekennen
-  (zie `PROGRESS.md`, sectie Testomgeving). Gebruik alleen TEST-gegevens.
+  (zie `PROGRESS.md`, sectie Testomgeving). Bevat sinds 2026-11-13 het geïmporteerde sponsoroverzicht (D052); voeg verder alleen TEST-gegevens toe.
