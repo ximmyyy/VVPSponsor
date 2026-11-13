@@ -1,7 +1,9 @@
 # VV Pernis Sponsorportaal
 
-Technische basis voor één modulaire Next.js-app met Supabase. Fases 1–4 zijn lokaal geïmplementeerd: technische basis, layouts, authenticatie en
-sponsor-CRM. Pakketten, contracten, financiën en publieke sponsorinhoud volgen later.
+Technische basis voor één modulaire Next.js-app met Supabase. Fases 1–8 zijn lokaal geïmplementeerd: technische basis, layouts, authenticatie,
+sponsor-CRM, pakketten/contracten/sponsorrechten, financieel beheer, dashboard met
+rapportages en het persoonlijke sponsorportaal. Acquisitie, evenementen en notificaties
+(fase 9) staan op pauze; de publieke sponsorwebsite volgt later.
 Lees bij ontwikkeling eerst [PROJECT.md](PROJECT.md), [PROGRESS.md](PROGRESS.md)
 en [AGENTS.md](AGENTS.md). Gebruik de bestaande checkout; een cloudtaak is al geïsoleerd.
 
@@ -189,7 +191,7 @@ intrekking, uitnodiging via Mailpit, herstel, eenmalige tokens en optionele MFA.
 De test weigert een ander databasedoel, gebruikt uitsluitend willekeurige UUIDs en
 `.example`-accounts en ruimt uitsluitend eigen fixtures op. Niet parallel uitvoeren
 met zichzelf of een dienstherstart. Stop de eigen devserver vóór `test:e2e`.
-Databasebasis: 189 pgTAP-controles, Node-basis: 7 tests. De nieuwe migraties werken
+Databasebasis toen: 189 pgTAP-controles, Node-basis: 7 tests (zie fase 5 voor de actuele aantallen). De nieuwe migraties werken
 ook op een lege lokale stack. Geen reset, remote migratie of deployment nodig.
 
 ## Fase 4: Sponsor CRM
@@ -231,3 +233,139 @@ De CRM-integratieflow gebruikt echte lokale JWTs, browserformulieren, Data API e
 een uitnodiging naar Mailpit. Zij ruimt uitsluitend eigen UUID/.example-fixtures op.
 Bestaande authregressies: `npm run test:auth`. Stop daarna de eigen Next-devserver
 voor `npm run test:e2e`. Geen productiegegevens of automatische seeds nodig.
+
+## Fase 5: pakketten, contracten en sponsorrechten
+
+Super Admin en commissie zien in de interne navigatie **Pakketten**, **Contracten** en
+**Sponsorrechten** (ook bereikbaar via `/account`). Er zijn geen officiële pakketten of
+prijzen ingevuld: de commissie voert die zelf in.
+
+1. Maak een pakket en een conceptversie met richtprijs en standaardrechten; publiceer
+   die. Gepubliceerde versies zijn vergrendeld; wijzigen = nieuwe versie.
+2. Stel vanuit een CRM-bedrijf een conceptcontract op, voeg pakket- en/of maatwerkregels
+   en rechten toe en bevestig. Bevestigen legt regels, rechten en partijgegevens in één
+   transactie vast; de sponsor ziet het contract pas daarna (via RLS; portaalscherm in fase 8).
+3. Wijzigingen na bevestiging gaan via een amendement. Verlengen maakt een nieuw concept
+   met voorganger; beëindigen vraagt datum en reden. Er wordt niets verwijderd.
+4. Registreer uitvoering per recht, voeg bewijs toe (PDF/PNG/JPEG, max. 8 MB, inhoud
+   servergecontroleerd) en deel expliciet met de sponsor.
+
+```sh
+npm run db:migrate
+npm run db:types
+npm run db:test          # 380 controles (fase 5)
+npm test                 # 16 tests (fase 5)
+npm run dev
+# Tweede terminal; niet parallel met test:auth/test:crm of dienstherstarts:
+npm run test:contracts
+```
+
+`test:contracts` gebruikt echte lokale JWTs, de browser, Data API en Storage, en ruimt
+uitsluitend eigen `.example`/TEST-fixtures op. Elders dan deze cloudmachine kan
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE` naar een eigen Chromium wijzen. Stop daarna de eigen
+devserver voor `npm run test:e2e` (41 tests). Gebruik bij scripting
+`supabase migration new <naam> </dev/null`, anders wacht de CLI op stdin.
+
+## Fase 6: financieel beheer
+
+Onder **Financiën** beheren commissie en Super Admin facturen, creditnota's en
+betalingen. Prijzen zijn **inclusief BTW** (standaard 21%, per regel aanpasbaar);
+nummers **F-JJJJ-NNNN** en **C-JJJJ-NNNN** worden pas bij uitreiken gatenvrij
+toegekend; de vervaldatum vul je altijd zelf in.
+
+1. Stel een factuur op (vanuit een bedrijf of contract), voeg contract- of losse regels
+   toe en reik uit. Daarna is de factuur vergrendeld; corrigeer met een creditnota.
+2. Registreer ontvangen geld handmatig en wijs het toe aan één of meer facturen.
+   Niet-toegewezen bedragen blijven zichtbaar. Restituties registreer je als
+   terugbetaling op een creditnota.
+3. Upload de verzonden factuur-PDF en deel die expliciet met de sponsor.
+
+```sh
+npm run db:migrate && npm run db:types
+npm run db:test          # 470 controles (fase 6)
+npm test                 # 21 tests (fase 6)
+npm run dev
+# Tweede terminal; niet parallel met andere integratiescripts:
+npm run test:finance
+```
+
+`test:finance` toetst ook echte gelijktijdige toewijzingen. Lokaal laten de
+integratietests gaten in de nummertellers achter (fixtures worden opgeruimd,
+tellers niet); dat speelt alleen in de lokale ontwikkeldatabase. Stop de devserver
+voor `npm run test:e2e` (46 tests).
+
+## Fase 7: dashboard en rapportages
+
+**Dashboard** (ook voor het bestuur, via `/account` → *Dashboard en rapportages*) toont per
+seizoen (1 juli – 30 juni) het budget van actieve betalende sponsors, kerncijfers,
+grafieken, binnenkort aflopende contracten en prospects. Een sponsor telt als actief
+wanneer je in het CRM **Betalende sponsor** aanvinkt én de relatiestatus **Actief** is.
+**Exporteer naar Excel** levert een .xlsx met samenvatting, seizoenen, sponsors,
+contracten, facturen en betalingen. Elke export wordt gelogd.
+
+```sh
+npm run db:migrate && npm run db:types
+npm run db:test          # 513 controles (fase 7)
+npm test                 # 24 tests (fase 7)
+npm run dev
+# Tweede terminal; niet parallel met andere integratiescripts:
+npm run test:reporting
+```
+
+Stop daarna de devserver voor `npm run test:e2e` (47 tests).
+
+## Fase 8: persoonlijk sponsorportaal
+
+Sponsors zien na inloggen op `/account` de knop **Naar mijn sponsorportaal**
+(`/account/portaal`): overzicht, samenwerking (lopend en vorige jaren), facturen,
+bedrijfsgegevens met wijzigingsverzoek, collega's en een Contact-knop (e-mail).
+
+- **Super Admin**: stel eenmalig het contactadres van de commissie in via
+  `/account/instellingen`. Zonder adres toont het portaal een melding.
+- **Commissie**: beoordeel wijzigingsverzoeken onder **Verzoeken** (`/account/verzoeken`).
+  Goedkeuren werkt het CRM direct bij; afwijzen vraagt een toelichting.
+- Collega-uitnodigingen gebruiken de bestaande server-only Auth-binding
+  (`scripts/local-admin-env.mjs`, zie fase 3).
+
+```sh
+npm run db:migrate && npm run db:types
+npm run db:test          # 571 controles
+npm test                 # 28 tests (actueel)
+npm run dev
+# Tweede terminal; niet parallel met andere integratiescripts:
+npm run test:portal      # volledige mobiele sponsorflow
+```
+
+Stop daarna de devserver voor `npm run test:e2e` (55 tests).
+
+## Testgereedheid: logo, kleuren en performance
+
+Het officiële logo staat in `public/brand/` en wordt overal via `next/image` getoond;
+clubkleuren komen uit het logo (`src/lib/branding.ts`, `globals.css`).
+
+**Lokaal testen zoals een gebruiker** (productiebuild):
+
+```sh
+npm run db:start && npm run db:migrate
+npm run build
+pkill -f next-server || true   # geen oude server laten draaien
+npm start                      # http://localhost:3000
+```
+
+**Performance meten** (tweede terminal, productiebuild draait, niet tegelijk met andere tests):
+
+```sh
+npm run test:perf              # tijdelijke PERF-volumedata, meet, ruimt op
+PERF_SPONSORS=1000 npm run test:perf
+node scripts/test-perf.mjs --cleanup-only   # alleen opruimen
+```
+
+Er is nog geen gedeelde testomgeving; die vereist een hosted Supabase-project en
+Vercel-preview (zie `PROGRESS.md`, open taken).
+
+## Testomgeving
+
+- App: https://vvp-sponsorportaal-test.vercel.app (Vercel-project `vvp-sponsorportaal-test`)
+- Database: Supabase-project `vvp-sponsorportaal-test` (Frankfurt), alle migraties toegepast.
+- Geen SMTP: accounts aanmaken in het Supabase-dashboard en daarna een rol toekennen
+  (zie `PROGRESS.md`, sectie Testomgeving). Gebruik alleen TEST-gegevens.

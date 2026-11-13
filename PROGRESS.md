@@ -8,11 +8,18 @@
 - Fase **2 — Design en navigatie**: afgerond en lokaal geverifieerd.
 - Fase **3 — Authenticatie en toegangsrechten**: lokaal geïmplementeerd en geverifieerd.
 - Fase **4 — Sponsor CRM**: lokaal afgerond en geverifieerd.
-- Volgende opdracht kan fase **5 — Sponsorpakketten en contracten** zijn. Die is niet gestart.
+- Fase **5 — Sponsorpakketten en contracten**: lokaal afgerond en geverifieerd.
+- Fase **6 — Financieel beheer**: lokaal afgerond en geverifieerd.
+- Fase **7 — Intern dashboard en rapportages**: lokaal afgerond en geverifieerd.
+- Fase **8 — Persoonlijk sponsorportaal**: lokaal afgerond en geverifieerd.
+- **Testgereedheid** (logo, logokleuren, performance): afgerond en geverifieerd op een productiebuild.
+- Fase **9 — Acquisitie, evenementen en notificaties**: **op pauze** op verzoek van de opdrachtgever.
+- **Testomgeving live**: https://vvp-sponsorportaal-test.vercel.app (zie sectie Testomgeving).
+- Volgende mogelijke opdracht: echte SMTP/uitnodigingen, overige fase 10 of fase 9 (op pauze).
 - Er werkt een technische Next.js-basis met minimale lokale database. Er werken nu
   login, gecontroleerde uitnodigingen en een private Storage-basis. Er is nog geen
   volledige sponsoradministratie of deployment. De startpagina meldt dit expliciet.
-- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D026. Werkinstructies:
+- Projectkader/besluiten: [PROJECT.md](PROJECT.md), D001–D050. Werkinstructies:
   [AGENTS.md](AGENTS.md). Installatie/start: [README.md](README.md).
 
 ## Fasestatus
@@ -24,12 +31,330 @@
 | 2 | Design en navigatie | Lokaal afgerond |
 | 3 | Authenticatie en toegangsrechten | Lokaal afgerond |
 | 4 | Sponsor CRM | Lokaal afgerond |
-| 5 | Sponsorpakketten en contracten | Niet gestart |
-| 6 | Financieel beheer | Niet gestart |
-| 7 | Intern dashboard en rapportages | Niet gestart |
-| 8 | Persoonlijk sponsorportaal | Niet gestart |
-| 9 | Acquisitie, evenementen en notificaties | Niet gestart |
-| 10 | Publieke sponsorwebsite en productievoorbereiding | Niet gestart |
+| 5 | Sponsorpakketten en contracten | Lokaal afgerond |
+| 6 | Financieel beheer | Lokaal afgerond |
+| 7 | Intern dashboard en rapportages | Lokaal afgerond |
+| 8 | Persoonlijk sponsorportaal | Lokaal afgerond |
+| 9 | Acquisitie, evenementen en notificaties | Op pauze (D047) |
+| 10 | Publieke sponsorwebsite en productievoorbereiding | Deels: huisstijl en performance; publieke site/productie niet gestart |
+
+## Testomgeving (hosted)
+
+Opdracht: Supabase en Vercel via de gekoppelde connectors, SMTP voorlopig niet nodig.
+
+| Onderdeel | Stand |
+| --- | --- |
+| Supabase | Project `vvp-sponsorportaal-test` (ref `decmdobylhgxihiwssrs`, eu-central-1), organisatie van de opdrachtgever, zonder kosten aangemaakt. |
+| Migraties | Alle 22 toegepast; versies gelijk aan de repository. 1–10 via de Supabase-connector; 11–22 via de Management API (de connectorbevestiging verscheen niet in de app), elk in één transactie met historie-registratie. |
+| Schemacontrole | Automatische vergelijking met de lokaal geteste database: functies (91), policies (36), kolommen (330), constraints (241), indexen (98), triggers (55), tabel-/kolom-/functierechten, RLS en bucket: **identiek**. |
+| Advisors | Security: alleen verwachte meldingen (private tabellen zonder policies = bewust geen API-toegang; 47 begrensde definer-RPC's voor ingelogde gebruikers met eigen rolcontrole); géén anon-uitvoerbare functies. Performance: alleen informatief (lege database). |
+| Auth | Site-URL en redirect-allowlist op de test-URL, registratie uit, wachtwoord ≥ 12, herauthenticatie bij wachtwoordwijziging, TOTP-MFA aan, anonieme login uit. Geen eigen SMTP (Supabase-standaardmail, alleen beperkt bruikbaar). |
+| Vercel | Project `vvp-sponsorportaal-test` (team ximmyyy, regio fra1, Node 24), gekoppeld aan `ximmyyy/VVPSponsor`. Variabelen: `APP_ENV=staging`, Supabase-URL, publishable key, app-URL. Geen server-secret. Vercel-authenticatie alleen op preview-builds; de test-URL is openbaar bereikbaar en de app vraagt zelf om in te loggen. |
+| Deployment | Productie-deployment van branch `claude/zealous-pascal-pc80uw` (commit `6e4b43b`) op https://vvp-sponsorportaal-test.vercel.app. |
+| Eerste Super Admin | Door de opdrachtgever aangemaakt in het Supabase-dashboard (bevestigd); daarna via eenmalige, voorwaardelijke SQL-bootstrap (precies één bevestigd account, nog geen rollen) `super_admin` gemaakt. Toekenning staat in `private.access_audit`. E-mailadres niet in documentatie of logs. |
+| Rooktest live | Start 200 met logo; `/inloggen` werkt; `/account`, dashboard, portaal, financiën → login; `/beheer`, `/portaal`, `/ontwerp` 404 no-store; private reacties no-store/no-referrer; favicon; anonieme Data API en `report_dashboard` 401; openbare registratie geweigerd (`signup_disabled`); geen browserfouten. |
+
+### Gebruik en beperkingen
+
+- **Eerste Super Admin**: maak in het Supabase-dashboard (Authentication → Users → Add user →
+  Create new user, met "Auto Confirm User") een account met een sterk wachtwoord. Daarna wordt
+  het via een eenmalige SQL-toekenning `super_admin` (geen publiek bootstrap-endpoint).
+- **Testaccounts**: op dezelfde manier aanmaken; rol/bedrijf toekennen via SQL of de
+  Super Admin-rolbeheerfunctie. Uitnodigingsmails werken niet zonder SMTP en server-secret.
+- Pushes naar de werkbranch maken (beveiligde) preview-builds; de vaste test-URL wordt alleen
+  bijgewerkt via een nieuwe productie-deployment. Productiebranch van Vercel is `main`.
+- Supabase-token voor de Management API staat als netwerkgeheim in de standaardomgeving van
+  deze cloudsessies; intrekken in Supabase (Account → Access Tokens) na afloop van de test.
+- Geen echte sponsorgegevens invoeren zolang privacyverklaring, bewaartermijnen en
+  verwerkersafspraken niet zijn vastgesteld; gebruik herkenbare TEST-gegevens.
+
+## Testgereedheid — logo, kleuren en performance
+
+Opdracht: acquisitie en mailing op pauze, app performance-technisch afmaken zodat hij getest
+kan worden, clubkleuren en logo toepassen.
+
+- Logo (`public/brand/vv-pernis-logo.png`, bijgesneden en geoptimaliseerd) via `next/image` in
+  alle koppen en groot op `/inloggen`; `src/app/icon.png` (2 KB) en `apple-icon.png` (9 KB).
+- Kleuren uit het logo: #045EA7 / #EA751D in `branding.ts`, CSS-tokens, dashboardhero en
+  grafieken; oranje accentlijn boven de interne en portaalkop. Ontwerppagina bijgewerkt.
+- Performance: migraties `rls_performance` (17 policies + `sponsors_read`) en
+  `reporting_performance`; `getClaims()` in de proxy; `requireAccess()` met React `cache()`.
+- Nieuw meetscript `npm run test:perf` (productiebuild vereist): tijdelijke PERF-volumedata,
+  databasetijden met echte rol/RLS (`explain analyze`, mediaan van 5) en paginatijden (mediaan
+  van 7), daarna opruimen. `PERF_KEEP=1` laat data staan; `--cleanup-only` ruimt op.
+
+| Meting (400 sponsors, productiebuild) | Voor | Na |
+| --- | --- | --- |
+| Sponsor: eigen facturen met saldi (DB) | 967 ms | 5 ms |
+| Sponsor: eigen contracten (DB) | 383 ms | 2 ms |
+| CRM-lijst (DB) | 54 ms | 2 ms |
+| Rapportfunctie dashboard / export (DB) | 190 / 232 ms | 85 / 139 ms |
+| `/account/sponsors` volledig geladen | 159 ms | 43 ms |
+| `/account/contracten` / `/financien` / `/sponsorrechten` | 117 / 111 / 184 ms | 43 / 41 / 45 ms |
+| Dashboard commissie / bestuur | 276 / 251 ms | 167 / 162 ms |
+| Portaal overzicht / samenwerking / facturen | 63 / 47 / 54 ms | 50 / 42 / 42 ms |
+
+Lokale meting op één machine (database en server lokaal); absolute waarden in een hosted
+omgeving liggen hoger door netwerklatentie, de verhoudingen zijn representatief.
+
+| Controle | Resultaat |
+| --- | --- |
+| `npm run lint`, `npm run typecheck` | Geslaagd. |
+| `npm test` | 28 geslaagd. |
+| `npm run db:test` | 571 geslaagd, ongewijzigd na de RLS-herschrijving. |
+| SQL-lint fail-on warning | Geslaagd. |
+| Lege lokale stack (VVPSponsorPerfReplay) | 22 migraties en 571 controles geslaagd; gestopt zonder volumes te wissen. |
+| Integratieflows op productiebuild | `test:auth`, `test:crm`, `test:contracts`, `test:finance`, `test:reporting`, `test:portal` alle geslaagd. |
+| `npm run test:e2e` | 55 geslaagd. |
+| Visuele controle | Startpagina, inloggen (1280/390 px), dashboard en portaal met logo bekeken; favicon 200 image/png. |
+
+### Correcties en lessen
+
+- Eerste paginameting liep tegen een achtergebleven oude `next-server` (proces heet niet
+  `next start`); daardoor faalden flows op ontbrekende CSS en waren de eerste "na"-paginacijfers
+  ongeldig. Alle Next-processen gestopt, opnieuw gestart en opnieuw gemeten; alleen die cijfers
+  staan hierboven. Gebruik `pkill -f next-server` vóór een nieuwe `next start`.
+- PERF-data met `PERF_KEEP` liet tijdelijk 400 extra bedrijven staan; databasetests die bedrijven
+  tellen faalden daardoor. Na `--cleanup-only` alles groen. Draai `test:perf` nooit tegelijk met tests.
+- Seed-SQL (dubbele kolom) en JSON-parsing van het queryplan in het meetscript gecorrigeerd.
+
+### Grenzen
+
+- Geen hosted testomgeving, productiedatabase of deployment aangemaakt (vereist expliciete opdracht).
+- Fase 9 (pipeline, evenementen, herinneringen, e-mailprovider) op pauze; het portaal verstuurt
+  zelf geen e-mail. Contactadres commissie nog door Super Admin in te stellen.
+- Eerder vastgelegde ontwerpkleuren in screenshots van vorige fases wijken licht af.
+
+## Fase 8 — Persoonlijk sponsorportaal
+
+Opdrachtgeverkeuzes (D043–D045): contact via e-mail; wijzigingsverzoeken voor logische
+bedrijfsgegevens; eigen contract en contracten van vorige jaren; sponsors mogen collega's
+uitnodigen.
+
+- `/account/portaal`: overzicht met lopende samenwerking en waarde, voortgang sponsorrechten,
+  openstaande facturen (met vervallen-melding), belangrijke datum (opzeg-/einddatum), snelkoppelingen
+  en contactblok met `mailto`. Tabnavigatie met `aria-current`, mobiel horizontaal scrollbaar.
+- `/samenwerking` (lopend/vorige jaren) en contractdetail met regels, rechten, gedeelde uitvoering
+  en bewijs, wijzigingen en documenten; `/facturen` met status, PDF en betalingen; `/bedrijf` met
+  huidige gegevens, aanvraagformulier en eigen verzoeken (intrekken); `/collegas` met gebruikers,
+  uitnodigen en intrekken.
+- Commissie: `/account/verzoeken` (open/afgehandeld, huidig vs. voorgesteld, goedkeuren met bericht,
+  afwijzen met reden); navigatie-item Verzoeken. Super Admin: `/account/instellingen` (clubnaam,
+  contactadres). `/account` toont sponsors een knop naar het portaal.
+
+| Controle fase 8 | Resultaat |
+| --- | --- |
+| `npm run lint`, `npm run typecheck` | Geslaagd (o.a. lintfout 'component in render' opgelost). |
+| `npm test` | 28 geslaagd (4 nieuw: verzoekvalidatie, toegestane velden, mailto, uitnodiging), 0 mislukt. |
+| `npm run db:test` | 571 geslaagd in zeven bestanden; `portal.test.sql` 58 nieuwe controles: eigen bedrijfsprojectie zonder interne velden, rollen, verzoekvalidatie en -whitelist, alleen gewijzigde velden, bedrijf uit machtiging, intrekken door collega, isolatie, beoordeling atomair met vorige waarden, dubbele KvK zonder halve wijziging, onveranderlijk na afhandeling, uitnodigingen (normalisatie, ander bedrijf, ouder account niet kaapbaar, e-mail-mismatch, interne rol, eenmalig), collega-toegang, intrekken (niet zichzelf, niet ander bedrijf, direct effectief), contactadres alleen Super Admin, anon, audit. |
+| SQL-lint fail-on warning | Geslaagd na vervolgmigratie `portal_request_volatility` (IMMUTABLE → STABLE). |
+| Lege lokale stack (VVPSponsorPortalReplay) | 20 migraties en 571 controles geslaagd; gestopt zonder volumes te wissen. |
+| `npm run test:portal` | Geslaagd: Super Admin stelt contactadres in via UI; sponsor op 390 px (mobiel, touch) doorloopt overzicht, samenwerking (lopend + vorig), rechten en bewijsdownload, facturen en PDF, wijzigingsverzoek met validatiefout, collega uitnodigen (echte Auth-invite) en intrekken; commissie keurt goed en CRM is bijgewerkt; sponsor B geïsoleerd; interne routes geweigerd; geen notities/concepten/interne rechten; axe 390/1440 px. Fixtures en contactadres hersteld. |
+| `test:crm`, `test:contracts`, `test:finance`, `test:reporting`, `test:auth` | Alle geslaagd na fase 8. |
+| `npm run test:e2e` | Productiebuild en 55 browsertests geslaagd (8 nieuwe sessievereisten). |
+| Visuele controle | Portaaloverzicht en contractdetail op 390 px bekeken. |
+
+### Correcties tijdens fase 8
+
+- Parameternamen `answer`/`email` botsten met kolommen; vóór toepassen hernoemd (`reply`, `invitee`).
+- `foundation.test.sql` maakte zelf de clubinstellingenrij aan; nu bestaat die via migratie, dus de
+  fixture gebruikt `on conflict` binnen de teruggedraaide transactie.
+- pgTAP-fixture voor een nieuw Auth-account kreeg expliciet `created_at` (zoals Supabase Auth doet);
+  zonder die waarde weigerde de uitnodigingskoppeling terecht.
+- Actief tabblad eerst via DOM-manipulatie; vervangen door een clientcomponent met `usePathname`.
+
+### Grenzen en open punten
+
+- Het echte contactadres is nog niet ingesteld; dat doet de Super Admin. Er gaat geen e-mail uit
+  het portaal zelf (fase 9 kiest een provider). Uitnodigingsmail loopt via Supabase Auth; productie-
+  SMTP moet nog worden ingericht.
+- Evenementen in het portaal volgen in fase 9. Geen chat of berichtenhistorie.
+- Ingetrokken collega's heractiveren gaat via de commissie (bestaande machtigingsworkflow).
+
+Bestanden: migraties `20261112205008_sponsor_portal.sql`, `…205115_portal_request_volatility.sql`,
+`supabase/tests/portal.test.sql`, aangepaste fixture in `foundation.test.sql`, `src/modules/portal/*`,
+routes `src/app/account/{portaal,verzoeken,instellingen}`, CRM-shell, accountpagina, CSS,
+`scripts/test-portal.mjs`, `tests/portal-schema.test.ts`, e2e-routes, databasetypes, documentatie.
+
+## Fase 7 — Intern dashboard en rapportages
+
+Opdrachtgeverkeuzes (D039–D040): kerncijfers huidige betalende sponsors en budget, binnenkort
+aflopende contracten en kansen; actieve sponsor = gemarkeerd als betalend én actief; per
+seizoen (1 juli – 30 juni); bestuur ziet alle cijfers; export in Excel.
+
+- CRM: nieuw vinkje **Betalende sponsor** in het bedrijfsformulier, zichtbaar in het dossier.
+- `/account/dashboard`: seizoenskeuze (huidig + 5 terug, 1 vooruit), hero-bedrag, zes
+  kerncijfertegels met toelichting en vervallen-waarschuwing, grafiek seizoenen vergeleken,
+  cumulatief verloop, top-10 sponsors, kansenpaneel (aflopende contracten met dagen-teller
+  en opzegdatum, prospects), tabel van alle sponsors en definities. Tooltip bij hover en
+  'Toon als tabel' per grafiek. Links naar dossiers alleen voor interne rollen.
+- Bestuur: zelfde dashboard en export, navigatie toont alleen Dashboard. Link op `/account`.
+- `/account/dashboard/export?seizoen=JJJJ`: .xlsx met zes tabbladen, gelogd.
+
+| Controle fase 7 | Resultaat |
+| --- | --- |
+| Dependencies | `recharts` 3.10.1, `exceljs` 4.4.0, `react-is` 19.3.0 exact; override `uuid` 11.1.1 voor ExcelJS (getest dat `v4` werkt). `npm audit --omit=dev`: 0 kwetsbaarheden. |
+| Paletvalidatie | dataviz-validator: clubblauw/cluboranje/aqua passeert lichtheid, chroma, CVD (ΔE 10,6) en normaal zicht; contrast-WARN voor aqua → legenda + tabelweergave. |
+| `npm run lint`, `npm run typecheck` | Geslaagd. |
+| `npm test` | 24 geslaagd (3 nieuw: seizoensparsing, formule-neutralisatie, CRM-vlag), 0 mislukt. |
+| `npm run db:test` | 513 geslaagd in zes bestanden; `reporting.test.sql` 43 nieuwe controles: vlag, actieve-sponsordefinitie (incl. archief), budget naar rato (meerjarig/beëindigd), leeg seizoen, gefactureerd/ontvangen zonder concepten, openstaand/vervallen, aflopend en verlengd, opzegdatum, prospects, maanden/cumulatief, sortering, bestuur alle cijfers zonder notities/accounts en zonder ruwe tabellen, exportlog, sponsor/inactief/anon geweigerd. |
+| SQL-lint fail-on warning | Geslaagd na twee vervolgmigraties (zie correcties). |
+| Lege lokale stack (VVPSponsorReportReplay) | 18 migraties en 513 controles geslaagd; gestopt zonder volumes te wissen. |
+| `npm run test:reporting` | Geslaagd: commissie en bestuur via echte login, hero = rapportfunctie, drie grafieken met tooltip, tabelweergave, seizoenswissel, Excel-download teruggelezen (tabbladen, euro-opmaak, geen formules, geïnjecteerde naam als tekst met apostrof, geen notities/accounts), bestuur zonder interne navigatie/links, sponsor en anoniem geen dashboard/export, exportlog, 360/1440 px en axe. |
+| `test:crm`, `test:contracts`, `test:finance`, `test:auth` | Alle geslaagd na fase 7. |
+| `npm run test:e2e` | Productiebuild en 47 browsertests geslaagd (sessievereiste dashboard). |
+| Visuele controle | Screenshots 1440 en 390 px bekeken; asnotatie en toekomstige maanden daarna verbeterd. |
+
+### Correcties tijdens fase 7
+
+- SQL-lint vond een window-functie binnen een aggregaat en een CTE buiten bereik in het
+  detaildeel; opgelost in `reporting_monthly_fix` en `reporting_detail_fix`.
+- De integratietest vond een verschoven rij voor euro-opmaak in de Excel-samenvatting
+  (aantal sponsors kreeg €-opmaak); gecorrigeerd en specifiek getoetst.
+- Een geweigerde update via RLS geeft 0 rijen, geen fout; pgTAP-verwachting daarop aangepast.
+- Na visuele controle: per as één bedragnotatie en cumulatieve lijnen stoppen bij de huidige maand.
+
+### Grenzen en open punten
+
+- 'Kansen' = verlengkansen en prospects; een acquisitiepipeline met fases en verwachte
+  waarde volgt in fase 9. Geen periodieke e-mailrapportage.
+- Openstaand/vervallen zijn peildatumcijfers, niet seizoensgebonden. Bedragen in JSON/Excel
+  zijn numeriek (Excel rekent met doubles); de bron blijft exact `numeric`.
+- Geen PDF-export of grafiekafbeeldingen in Excel; alleen data-tabbladen.
+
+Bestanden: migraties `20261112203315_reporting.sql`, `…203410_reporting_monthly_fix.sql`,
+`…203419_reporting_detail_fix.sql`, `supabase/tests/reporting.test.sql`,
+`src/modules/reporting/*`, `src/app/account/dashboard/*`, CRM-schema/formulier/dossier/shell,
+accountpagina, `globals.css` (dashboardstijl), `scripts/test-reporting.mjs`,
+`tests/reporting-schema.test.ts`, e2e-route, package/lockfile, databasetypes, documentatie.
+
+## Fase 6 — Financieel beheer
+
+Opdrachtgeverkeuzes: prijzen incl. 21% BTW, nummering F-/C-JJJJ-NNNN, vervaldatum altijd
+handmatig, commissie + Super Admin beheren financiën (D033–D035).
+
+- `/account/financien`: facturen/creditnota's (filter status, bedrijf; 25 per pagina) en
+  betalingen met niet-toegewezen bedrag. Links in de interne navigatie en op `/account`.
+- Factuur opstellen per bedrijf, optioneel vanuit een vastgelegd contract; regels uit
+  contractregels (termijnbedrag of volledige prijs) of losse regels met BTW-tarief.
+  Concept bewerken/verwijderen; uitreiken met factuurdatum en verplichte vervaldatum.
+- Factuurdetail: totaal incl./BTW/excl., betaald, gecrediteerd, openstaand, afgeleide
+  status (openstaand/deels betaald/vervallen/voldaan), factuuradresmomentopname,
+  afwikkelingshistorie met terugdraaien, volledige of lege creditnota, verrekenen van
+  tegoed, restitutie-link en factuur-PDF-upload (alleen PDF, delen expliciet).
+- Betaling registreren (ontvangst/terugbetaling, methode, kenmerk, dubbel-waarschuwing),
+  toewijzen aan openstaande facturen of creditnota's, betaling terugdraaien met reden.
+- Contractpagina toont contractwaarde, gefactureerd (na credits) en nog te factureren.
+
+| Controle fase 6 | Resultaat |
+| --- | --- |
+| `npm run lint`, `npm run typecheck` | Geslaagd. |
+| `npm test` | 21 geslaagd (5 nieuw: centen, factuurregel, uitreiken, betaling, afgeleide status), 0 mislukt. |
+| `npm run db:test` | 470 geslaagd in vijf bestanden; `finance.test.sql` 90 nieuwe controles: afronding incl. BTW (21%/9%, regelafronding), termijnen, F/C-nummerformaat en gatenvrij na mislukte uitreiking, over-facturatie per contractregel, vervaldatum/factuurdatum, onveranderlijkheid (ook voor eigenaar), deelbetaling, onverdeeld, overtoewijzing, centen, dubbele registratie, terugdraaien, credit met automatische verrekening, max. crediteren, tegoed verrekenen, restitutie, reconciliatie, bedrijfsgrenzen, sponsor A/B/inactief/bestuur/anon, audit. |
+| Lokale SQL-lint public/private, fail-on warning | Geslaagd, geen bevindingen. |
+| Lege lokale stack (VVPSponsorFinanceReplay) | 15 migraties en 470 controles geslaagd; gestopt zonder volumes te wissen. Eerste poging hergebruikte het bewaarde volume van de fase-5-replay en was dus geen lege stack; daarom een nieuw project-id gebruikt. |
+| `npm run test:finance` | Geslaagd: browserflow factuur → betaling → toewijzing → creditnota → verrekening, plus API-controles: twee parallelle toewijzingen van dezelfde betaling en twee parallelle betalingen op één factuur leveren telkens precies één succes en één 23514. Restitutie, contractwaarde ≠ gefactureerd ≠ ontvangen, factuur-PDF download (A 307, B 404), isolatie, terugdraaien, 360/1440 px en axe. 0 achtergebleven fixtures. |
+| `npm run test:contracts`, `test:crm`, `test:auth` | Alle drie geslaagd na fase 6. |
+| `npm run test:e2e` | Productiebuild geslaagd; 46 browsertests (5 nieuwe sessievereisten) geslaagd. |
+| Visuele controle | Screenshot factuurdetail op 1440 px geïnspecteerd; bedragen consistent. |
+
+### Correcties tijdens fase 6
+
+- `add_invoice_line` las bij losse regels een niet-toegewezen record; vervolgmigratie
+  `finance_line_fix` (toegepaste migratie niet herschreven).
+- Variabele `amount` botste in `register_payment` met de kolomnaam; vóór toepassen hernoemd.
+- `Intl` gebruikt een vaste spatie tussen € en bedrag; testselectors gebruiken `\s`.
+- Na volledige toewijzing/verrekening verdwijnt het formulier; de nieuwe regel in de
+  afwikkelingshistorie is de zichtbare bevestiging.
+
+### Grenzen en open punten
+
+- Geen PDF-generatie, verzending per e-mail, bank-/boekhoudkoppeling of export naar
+  boekhoudsoftware; geen herinneringen voor vervallen facturen (fase 9).
+- BTW-tarief per regel is een administratieve keuze; of alle sponsoring BTW-belast is,
+  is fiscaal advies en niet door de software gecontroleerd.
+- Nummering volgt het kalenderjaar van de factuurdatum; een factuur met een datum in
+  een vorig jaar krijgt een nummer in die reeks. Chronologie binnen een reeks wordt niet
+  afgedwongen.
+- Lokale integratietests verwijderen hun fixtures maar zetten nummertellers niet terug;
+  in de lokale ontwikkeldatabase ontstaan daardoor gaten. Productie verwijdert nooit
+  uitgereikte facturen.
+- Bestuursinzage en financiële rapportages volgen in fase 7; sponsorschermen in fase 8
+  (RLS is al getest).
+
+Bestanden: `supabase/migrations/20261112201017_finance.sql`, `…201355_finance_line_fix.sql`,
+`supabase/tests/finance.test.sql`, `src/modules/finance/*`, routes onder
+`src/app/account/financien`, contractpagina/-lijst, CRM-shell, accountpagina, e2e-routes,
+`scripts/test-finance.mjs`, `tests/finance-schema.test.ts`, databasetypes, documentatie.
+
+## Fase 5 — Sponsorpakketten en contracten
+
+- Pakketbeheer (`/account/pakketten`): pakket aanmaken/wijzigen/archiveren, conceptversie
+  met richtprijs, optioneel BTW-tarief en standaardrechten (React Hook Form + field array),
+  publiceren (vergrendelt, vorige versie uitgefaseerd) en uitfaseren.
+- Contracten (`/account/contracten`, `/nieuw`, `/[id]`): concept per CRM-bedrijf met
+  validatie op looptijd/opzegdatum, pakketregels (prijs en rechten als eigen kopie) en
+  maatwerkregels, extra rechten, verwijderen alleen in concept, atomair bevestigen met
+  partijmomentopname, amendementen, verlenging, beëindiging. Filter op status/bedrijf,
+  25 per pagina. Contractwaarde uitsluitend uit de databaseview `contract_totals`.
+- Sponsorrechten: planning/verantwoordelijke/status/portaalzichtbaarheid beheren,
+  uitvoering registreren (ook gedeeltelijk), controleren, delen/niet delen, ongedaan maken
+  met reden. Overzicht `/account/sponsorrechten` sorteert open rechten op deadline met
+  filter "mijn verantwoordelijkheid" en markeert verlopen deadlines.
+- Documenten: upload van contractdocumenten en bewijs met serverinhoudscontrole, SHA-256,
+  `pending` → `available` na objectcontrole, delen met sponsor/bestuur expliciet, intrekken
+  direct effectief voor nieuwe downloadlinks (60 s).
+- Navigatie: Sponsors · Pakketten · Contracten · Sponsorrechten in de interne shell;
+  links op `/account`; contractlijst in het bedrijfsdossier.
+
+| Controle fase 5 | Resultaat |
+| --- | --- |
+| `npm run lint`, `npm run typecheck` | Geslaagd. |
+| `npm test` | 16 geslaagd (6 nieuw: decimalen, periode, regels/amendement, versielimiet, afgeleide fase, uploadsignaturen), 0 mislukt. |
+| `npm run db:test` | 380 geslaagd in vier bestanden; `contracts.test.sql` 101 nieuwe controles: rollen/anon/inactief, twee bedrijven met meerdere gebruikers, pakketversie-onveranderlijkheid, oude contracten intact na nieuwe versie, atomair bevestigen en mislukte bevestiging zonder wijziging, triggers ook voor eigenaar, amendement + baseline, verlenging/max. één opvolger, beëindiging, bedrijfsoverschrijdende FK's, uitvoering/ongedaan maken, documentstatus en -verplaatsing, audit. |
+| Lokale SQL-lint public/private, fail-on warning | Geslaagd na vervolgmigratie met expliciete jsonb-casts. Geen hosted advisorrapport (geen hosted project). |
+| Lege lokale stack (VVPSponsorContractReplay, andere poorten) | Alle 13 migraties en 380 controles geslaagd; daarna gestopt, geen volumes gewist. |
+| `npm run test:contracts` | Geslaagd: echte browser/Auth/Data API/Storage-flow (zie scriptmelding), inclusief sponsor A/B/bestuur/anon-isolatie, signed download, intrekking, geweigerde vervalste upload, 360/1440 px en axe zonder bevindingen. Fixtures volledig opgeruimd (0 achtergebleven gebruikers/rijen/objecten gecontroleerd). |
+| `npm run test:auth` | Geslaagd na aanpassing (documenten worden nu gefinaliseerd; nieuwe audittabel opgeruimd). |
+| `npm run test:crm` | 2× achter elkaar geslaagd. De eerste run direct na het starten van de devserver faalde één keer in de axe/overflowstap van het dossier; bij herhaling met logging geen overflow of axe-bevinding. Vermoedelijk timing bij eerste compilatie; als bekende flakiness genoteerd. |
+| `npm run test:e2e` | Productiebuild geslaagd; 41 browsertests geslaagd (6 nieuwe sessievereisten voor fase-5-routes). |
+| Visuele controle | Screenshots van contractdossier op 1440 en 360 px geïnspecteerd. |
+
+### Correcties tijdens fase 5
+
+- `insert_line` las bij maatwerkregels een niet-toegewezen record; ontdekt door pgTAP en
+  opgelost in vervolgmigratie `contract_line_fix` (toegepaste migratie niet herschreven).
+- SQL-lint meldde impliciete text→jsonb-casts; opgelost in `contract_amendment_casts`.
+- `supabase migration new` wacht op stdin buiten een terminal; het aldus lege bestand
+  is direct gevuld. Gebruik `</dev/null` bij scripting.
+- Na publiceren/bevestigen/beëindigen verdwijnt het betreffende formulier; de nieuwe
+  toestand wordt via een statusbadge (`role=status`) aangekondigd.
+- Bestaande pgTAP-documentfixtures en `test:auth` expliciet op `available` / finalize
+  gezet, omdat nieuwe documenten nu standaard `pending` zijn.
+
+### Grenzen en open punten
+
+- Geen echte pakketten, prijzen, contracten of templates ingevoerd; geen digitale
+  ondertekening of PDF-generatie van contracten. Bevestigen ≠ handtekening.
+- Bestuur heeft nog geen contractinzage (volgt als goedgekeurd overzicht in fase 7);
+  het sponsorportaal-scherm voor contracten/rechten volgt in fase 8 (RLS is al klaar en
+  getest). Geen e-mailherinneringen voor deadlines/opzegdata (fase 9).
+- Uitvoeringscontrole zonder vier-ogenprincipe; besluit opdrachtgever nodig.
+- Mislukte uploads blijven als `pending` metadata (onzichtbaar buiten commissie); een
+  opruimproces/heruploadknop is nog niet gebouwd. Geen virusscan; alleen
+  signatuurcontrole en beperkte bestandstypen.
+- Contractnummerteller is per kalenderjaar (Europe/Amsterdam) en loopt ook door bij
+  tests en verwijderde testfixtures; nummers zijn uniek maar niet gatenvrij.
+- Test-opruiming gebruikt lokaal `session_replication_role=replica` om de historie-
+  triggers voor uitsluitend eigen fixtures te omzeilen. Nooit op gedeelde databases.
+
+Bestanden: `supabase/migrations/20261112193854_packages_contracts.sql`,
+`…194623_contract_line_fix.sql`, `…194653_contract_amendment_casts.sql`,
+`supabase/tests/contracts.test.sql`, `src/modules/contracts/*`, routes onder
+`src/app/account/{pakketten,contracten,sponsorrechten}`, CRM-shell/dossier/account,
+downloadroute, `next.config.ts` (serveractie-limiet 9 MB), databasetypes,
+`scripts/test-contracts.mjs`, `tests/contracts-schema.test.ts`, e2e-routes,
+aangepaste `test-auth.mjs` en `auth.test.sql`-fixtures, documentatie.
 
 ## Fase 4 — Sponsor CRM
 
@@ -374,10 +699,11 @@ gepubliceerd of gedeployd; herstel in een nieuwe cloudtaak is niet getest.
 
 ## Open taken en volgende fase
 
-Fase 4 is lokaal geïmplementeerd. Fase 5 (Sponsorpakketten en contracten) vereist
-een nieuwe opdracht en echte pakket-/rechten-/prijsinformatie, voorwaarden,
-looptijden, contracttemplates en het verlengings-/opzegproces. Die gegevens worden
-niet verzonnen. Echte CRM-import blijft een aparte opdracht met proefvalidatie.
+Fases 1–8 en testgereedheid zijn lokaal afgerond; fase 9 staat op pauze. Voor testen door
+de club is een gedeelde testomgeving nodig: een hosted Supabase-project (EU-regio) en een
+Vercel-preview, met eigen SMTP voor Auth-mails, exacte redirect-URL's en de server-secret in
+omgevingsbeheer. Dat vereist een expliciete opdracht en accounts/budget van de club. Daarna:
+eerste echte Super Admin aanmaken, contactadres instellen, testaccounts per rol uitnodigen. Echte CRM-import blijft een aparte opdracht met proefvalidatie.
 Officieel logo, eerste echte Super Admin en productieconfiguratie blijven open;
 geen waarden of echte persoonsgegevens in Git opgeslagen.
 
@@ -390,3 +716,9 @@ geen waarden of echte persoonsgegevens in Git opgeslagen.
 | 2026-11-12 | 2 | Clubkleuren, publieke/interne/portaallayouts, lokale ontwerpgrens, toegankelijke componenten en 25 geslaagde browsercontroles. | D014–D016 |
 | 2026-11-12 | 3 | Auth, live autorisatie, bedrijfsmachtigingen, private Storage, uitnodiging, herstel en optionele MFA lokaal geverifieerd. | D017–D021 |
 | 2026-11-12 | 4 | CRM, meerdere contacten, interne privacy, prospectconversie, filters/archief en beperkte commissie-uitnodigingen. | D022–D026 |
+| 2026-11-12 | 5 | Pakketversies, contracten met regels/rechten, atomaire bevestiging, amendementen, verlenging/beëindiging, uitvoering met bewijs en private contractdocumenten; 380 DB-controles, 41 browsertests en echte contractflow. | D027–D032 |
+| 2026-11-12 | 6 | Facturen incl. 21% BTW, gatenvrije F/C-nummering, termijnen uit contracten, creditnota's met verrekening, handmatige betalingen met vergrendelde toewijzing, restitutie en factuur-PDF; 470 DB-controles, 46 browsertests en echte financiële flow. | D033–D038 |
+| 2026-11-12 | 7 | Dashboard met kerncijfers en drie grafieken per seizoen, CRM-vlag betalend, bestuurstoegang en Excel-export; 513 DB-controles, 47 browsertests en echte rapportageflow. | D039–D042 |
+| 2026-11-12 | 8 | Persoonlijk sponsorportaal: overzicht, samenwerking (huidig + eerder), facturen, wijzigingsverzoeken met commissiebeoordeling, contact via e-mail, collega's uitnodigen/intrekken; 571 DB-controles, 55 browsertests en mobiele flow. | D043–D046 |
+| 2026-11-12 | 9/10 | Fase 9 op pauze. Testgereedheid: officieel logo en logokleuren, sponsor-RLS en rapportage geoptimaliseerd (tot 200× sneller), Auth één keer per verzoek, meetscript `test:perf`; alle flows op productiebuild groen. | D047–D050 |
+| 2026-11-12 | 10 | Testomgeving live: Supabase (22 migraties, schema identiek) en Vercel-productie-deployment, Auth ingesteld, live rooktest geslaagd. | D051 |

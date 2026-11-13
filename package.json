@@ -24,7 +24,12 @@
     "db:types": "node scripts/database-types.mjs",
     "test:e2e": "npm run build && playwright test",
     "test:auth": "node scripts/test-auth.mjs",
-    "test:crm": "node scripts/test-crm.mjs"
+    "test:crm": "node scripts/test-crm.mjs",
+    "test:contracts": "node scripts/test-contracts.mjs",
+    "test:finance": "node scripts/test-finance.mjs",
+    "test:reporting": "node scripts/test-reporting.mjs",
+    "test:portal": "node scripts/test-portal.mjs",
+    "test:perf": "node scripts/test-perf.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "7.0.6",
@@ -32,12 +37,15 @@
     "@supabase/supabase-js": "2.119.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
+    "exceljs": "4.4.0",
     "lucide-react": "1.72.0",
     "next": "16.4.6",
     "radix-ui": "1.8.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "react-hook-form": "7.92.0",
+    "react-is": "19.3.0",
+    "recharts": "3.10.1",
     "server-only": "0.0.1",
     "tailwind-merge": "3.7.0",
     "zod": "4.6.7"
@@ -54,5 +62,10 @@
     "supabase": "3.1.0",
     "tailwindcss": "4.3.5",
     "typescript": "5.9.3"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "11.1.1"
+    }
   }
 }

@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createSessionClient } from "@/lib/supabase/server";
 import { z } from "zod";
@@ -6,7 +7,12 @@ const schema = z.object({
   role: z.enum(["super_admin", "sponsorcommissie", "clubbestuur", "sponsor"]),
   sponsor_id: z.uuid().nullable(),
 });
-export async function requireAccess() {
+/**
+ * Eén keer per serververzoek: layout en pagina delen dezelfde geverifieerde gebruiker
+ * (getUser bij de Auth-server, dus ook ingetrokken sessies) en actuele DB-autorisatie.
+ * `cache` geldt alleen binnen één request; er wordt niets tussen gebruikers gedeeld.
+ */
+export const requireAccess = cache(async function requireAccess() {
   const client = await createSessionClient();
   const {
     data: { user },
@@ -22,4 +28,4 @@ export async function requireAccess() {
   )
     redirect("/geen-toegang");
   return { client, user, access: context.data };
-}
+});

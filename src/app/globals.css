@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
-/* Alleen aangeleverde clubkleuren; ondersteunende neutralen zijn ontwerptokens. */
+/* Clubkleuren uit het officiële logo; ondersteunende neutralen zijn ontwerptokens. */
 :root {
-  --brand-primary: #125b9e;
-  --brand-accent: #e67522;
+  --brand-primary: #045ea7;
+  --brand-primary-dark: #034a85;
+  --brand-accent: #ea751d;
   --background: #f4f6f9;
   --foreground: #142b43;
   --card: #fff;
@@ -17,7 +18,7 @@
   --sidebar: #102d48;
   --sidebar-foreground: #fff;
   --sidebar-muted: #b8c9da;
-  --ring: #125b9e;
+  --ring: #045ea7;
 }
 @theme inline {
   --color-background: var(--background);
@@ -117,29 +118,10 @@ a {
   gap: 0.8rem;
   color: var(--foreground);
 }
-.brand-mark {
-  display: flex;
-  position: relative;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  color: white;
-  border-radius: 0.7rem 0.7rem 0.7rem 0.1rem;
-  background: var(--brand-primary);
-  font-weight: 800;
-  font-size: 1rem;
-  letter-spacing: -0.08em;
-}
-.brand-dot {
-  position: absolute;
-  width: 0.55rem;
-  height: 0.55rem;
-  border: 2px solid white;
-  border-radius: 100%;
-  bottom: 0.4rem;
-  right: 0.35rem;
-  background: var(--brand-accent);
+.brand-logo {
+  display: block;
+  flex: none;
+  height: auto;
 }
 .brand-name {
   font-size: 1rem;
@@ -159,10 +141,6 @@ a {
 }
 .brand-inverse .brand-name > span {
   color: var(--sidebar-muted);
-}
-.brand-inverse .brand-mark {
-  background: #fff;
-  color: var(--brand-primary);
 }
 .public-shell {
   min-height: 100svh;
@@ -1219,4 +1197,182 @@ a {
     grid-template-columns: 1fr;
     gap: 0.2rem;
   }
+}
+
+/* Fase 7: dashboard. Tekst draagt nooit de seriekleur; identiteit via swatches. */
+.dash-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+.dash-hero {
+  background: linear-gradient(135deg, var(--brand-primary-dark) 0%, var(--brand-primary) 65%, #1a6fb8 100%);
+  border-bottom: 4px solid var(--brand-accent);
+  color: #fff;
+  border-radius: 0.75rem;
+  padding: 1.75rem;
+}
+.dash-hero-value {
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
+  font-weight: 650;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.dash-hero p {
+  color: #e3ecf6;
+}
+.dash-tile {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.dash-tile-label {
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.dash-tile-value {
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.dash-tile-note {
+  font-size: 0.78rem;
+  color: var(--muted-foreground);
+}
+.dash-panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  min-width: 0;
+}
+.dash-panel h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.dash-panel .dash-sub {
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+  margin-top: 0.15rem;
+}
+.dash-two {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr));
+}
+.dash-chart {
+  width: 100%;
+  min-width: 0;
+}
+.dash-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.1rem;
+  margin: 0.75rem 0;
+  font-size: 0.8rem;
+  color: #16263a;
+}
+.dash-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.dash-swatch {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 0.2rem;
+  flex: none;
+}
+.dash-tooltip {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  box-shadow: 0 6px 20px rgba(15, 35, 60, 0.12);
+  font-size: 0.8rem;
+}
+.dash-tooltip-title {
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+.dash-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.dash-tooltip-row strong {
+  margin-left: auto;
+  padding-left: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.dash-table-toggle {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}
+.dash-table-toggle summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--primary);
+  text-decoration: underline;
+}
+.dash-num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.dash-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--secondary);
+}
+.dash-pill-warn {
+  background: #fff4e5;
+  border-color: #f2c48d;
+  color: #7a3e00;
+}
+.dash-pill-danger {
+  background: #fdecec;
+  border-color: #f1b5b5;
+  color: #8a1c1c;
+}
+
+/* Fase 8: sponsorportaal. */
+.portal-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  color: var(--foreground);
+}
+.portal-tab:hover {
+  color: var(--primary);
+  border-bottom-color: var(--border);
+}
+.portal-tab[aria-current="page"] {
+  color: var(--primary);
+  font-weight: 600;
+  border-bottom-color: var(--primary);
+}
+
+/* Clubaccent: oranje lijn uit het logo boven de app-koppen (decoratief, geen tekst). */
+.brand-header {
+  border-top: 4px solid var(--brand-accent);
 }

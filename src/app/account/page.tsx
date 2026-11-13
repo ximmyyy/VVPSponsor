@@ -28,23 +28,51 @@ export default async function Account() {
             }[access.role]
           }
         </p>
+        {access.role === "sponsor" && (
+          <Link
+            href="/account/portaal"
+            className="my-6 inline-flex min-h-11 items-center rounded-md bg-primary px-4 font-medium text-primary-foreground"
+          >
+            Naar mijn sponsorportaal
+          </Link>
+        )}
         {companies?.map((company) => (
           <p key={company.id} className="my-4">
             Bedrijf: {company.name}
           </p>
         ))}
-        {["super_admin", "sponsorcommissie"].includes(access.role) && (
-          <Link href="/account/sponsors" className="my-6 block underline">
-            Sponsors beheren
+        {["super_admin", "sponsorcommissie", "clubbestuur"].includes(
+          access.role,
+        ) && (
+          <Link href="/account/dashboard" className="my-6 block underline">
+            Dashboard en rapportages
           </Link>
         )}
-        <p className="my-6">
-          De functionele sponsormodules volgen in latere fases.
-        </p>
+        {["super_admin", "sponsorcommissie"].includes(access.role) && (
+          <>
+            <Link href="/account/sponsors" className="my-6 block underline">
+              Sponsors beheren
+            </Link>
+            <Link href="/account/contracten" className="my-6 block underline">
+              Contracten en sponsorrechten
+            </Link>
+            <Link href="/account/pakketten" className="my-6 block underline">
+              Sponsorpakketten
+            </Link>
+            <Link href="/account/financien" className="my-6 block underline">
+              Financiën
+            </Link>
+          </>
+        )}
         {access.role === "super_admin" && (
-          <Link href="/account/gebruikers" className="my-6 block underline">
-            Gebruiker uitnodigen
-          </Link>
+          <>
+            <Link href="/account/gebruikers" className="my-6 block underline">
+              Gebruiker uitnodigen
+            </Link>
+            <Link href="/account/instellingen" className="my-6 block underline">
+              Clubinstellingen (contactadres portaal)
+            </Link>
+          </>
         )}
         <Link href="/account/beveiliging" className="my-6 block underline">
           Extra accountbeveiliging

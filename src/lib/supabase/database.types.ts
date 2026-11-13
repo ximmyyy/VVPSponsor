@@ -6,28 +6,274 @@ export type Database = {
           Tables: {
             "club_settings": {
                   Row: {
-                    "club_name": string,"created_at": string,"id": boolean,"locale": string,"timezone": string,"updated_at": string
+                    "club_name": string,"contact_email": string | null,"created_at": string,"id": boolean,"locale": string,"timezone": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "club_name": string,"created_at"?: string,"id"?: boolean,"locale"?: string,"timezone"?: string,"updated_at"?: string
+                    "club_name": string,"contact_email"?: string | null,"created_at"?: string,"id"?: boolean,"locale"?: string,"timezone"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "club_name"?: string,"created_at"?: string,"id"?: boolean,"locale"?: string,"timezone"?: string,"updated_at"?: string
+                    "club_name"?: string,"contact_email"?: string | null,"created_at"?: string,"id"?: boolean,"locale"?: string,"timezone"?: string,"updated_at"?: string
                   }
                   Relationships: [
 
                   ]
-                },"documents": {
+                },"contract_amendments": {
                   Row: {
-                    "board_shared": boolean,"id": string,"object_path": string,"sponsor_id": string,"sponsor_shared": boolean,"title": string
+                    "changes": NonNullable<Json>,"contract_id": string,"created_at": string,"created_by": string | null,"effective_on": string,"id": string,"reason": string,"sequence_number": number,"sponsor_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "board_shared"?: boolean,"id"?: string,"object_path": string,"sponsor_id": string,"sponsor_shared"?: boolean,"title": string
+                    "changes"?: NonNullable<Json>,"contract_id": string,"created_at"?: string,"created_by"?: string | null,"effective_on": string,"id"?: string,"reason": string,"sequence_number": number,"sponsor_id": string
                   }
                   Update: {
-                    "board_shared"?: boolean,"id"?: string,"object_path"?: string,"sponsor_id"?: string,"sponsor_shared"?: boolean,"title"?: string
+                    "changes"?: NonNullable<Json>,"contract_id"?: string,"created_at"?: string,"created_by"?: string | null,"effective_on"?: string,"id"?: string,"reason"?: string,"sequence_number"?: number,"sponsor_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "contract_amendments_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_invoicing"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "contract_amendments_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_totals"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "contract_amendments_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contracts"
+      referencedColumns: ["id","sponsor_id"]
+    }
+                  ]
+                },"contract_documents": {
+                  Row: {
+                    "contract_id": string,"created_at": string,"document_id": string,"document_role": string,"sponsor_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "contract_id": string,"created_at"?: string,"document_id": string,"document_role"?: string,"sponsor_id": string
+                  }
+                  Update: {
+                    "contract_id"?: string,"created_at"?: string,"document_id"?: string,"document_role"?: string,"sponsor_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "contract_documents_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_invoicing"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "contract_documents_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_totals"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "contract_documents_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contracts"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "contract_documents_document_id_sponsor_id_fkey"
+      columns: ["document_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "documents"
+      referencedColumns: ["id","sponsor_id"]
+    }
+                  ]
+                },"contract_lines": {
+                  Row: {
+                    "amendment_id": string | null,"contract_id": string,"created_at": string,"currency": string,"description": string | null,"id": string,"line_total": number | null,"package_version_id": string | null,"position": number,"quantity": number,"sponsor_id": string,"title": string,"unit_price": number,"vat_rate": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amendment_id"?: string | null,"contract_id": string,"created_at"?: string,"currency"?: string,"description"?: string | null,"id"?: string,"line_total"?: never,"package_version_id"?: string | null,"position"?: number,"quantity": number,"sponsor_id": string,"title": string,"unit_price": number,"vat_rate"?: number | null
+                  }
+                  Update: {
+                    "amendment_id"?: string | null,"contract_id"?: string,"created_at"?: string,"currency"?: string,"description"?: string | null,"id"?: string,"line_total"?: never,"package_version_id"?: string | null,"position"?: number,"quantity"?: number,"sponsor_id"?: string,"title"?: string,"unit_price"?: number,"vat_rate"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "contract_lines_amendment_id_contract_id_fkey"
+      columns: ["amendment_id","contract_id"]
+isOneToOne: false
+      referencedRelation: "contract_amendments"
+      referencedColumns: ["id","contract_id"]
+    },{
+      foreignKeyName: "contract_lines_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_invoicing"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "contract_lines_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_totals"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "contract_lines_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contracts"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "contract_lines_package_version_id_fkey"
+      columns: ["package_version_id"]
+isOneToOne: false
+      referencedRelation: "package_versions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"contract_rights": {
+                  Row: {
+                    "amendment_id": string | null,"cancelled_by_amendment_id": string | null,"contract_id": string,"contract_line_id": string | null,"created_at": string,"deadline": string | null,"description": string,"id": string,"portal_visible": boolean,"position": number,"quantity": number,"responsible_id": string | null,"source_template_id": string | null,"sponsor_id": string,"status": string,"unit": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amendment_id"?: string | null,"cancelled_by_amendment_id"?: string | null,"contract_id": string,"contract_line_id"?: string | null,"created_at"?: string,"deadline"?: string | null,"description": string,"id"?: string,"portal_visible"?: boolean,"position"?: number,"quantity": number,"responsible_id"?: string | null,"source_template_id"?: string | null,"sponsor_id": string,"status"?: string,"unit": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "amendment_id"?: string | null,"cancelled_by_amendment_id"?: string | null,"contract_id"?: string,"contract_line_id"?: string | null,"created_at"?: string,"deadline"?: string | null,"description"?: string,"id"?: string,"portal_visible"?: boolean,"position"?: number,"quantity"?: number,"responsible_id"?: string | null,"source_template_id"?: string | null,"sponsor_id"?: string,"status"?: string,"unit"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "contract_rights_amendment_id_contract_id_fkey"
+      columns: ["amendment_id","contract_id"]
+isOneToOne: false
+      referencedRelation: "contract_amendments"
+      referencedColumns: ["id","contract_id"]
+    },{
+      foreignKeyName: "contract_rights_cancelled_by_amendment_id_contract_id_fkey"
+      columns: ["cancelled_by_amendment_id","contract_id"]
+isOneToOne: false
+      referencedRelation: "contract_amendments"
+      referencedColumns: ["id","contract_id"]
+    },{
+      foreignKeyName: "contract_rights_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_invoicing"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "contract_rights_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_totals"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "contract_rights_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contracts"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "contract_rights_contract_line_id_contract_id_fkey"
+      columns: ["contract_line_id","contract_id"]
+isOneToOne: false
+      referencedRelation: "contract_lines"
+      referencedColumns: ["id","contract_id"]
+    },{
+      foreignKeyName: "contract_rights_source_template_id_fkey"
+      columns: ["source_template_id"]
+isOneToOne: false
+      referencedRelation: "package_right_templates"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"contracts": {
+                  Row: {
+                    "confirmed_at": string | null,"confirmed_by": string | null,"contract_number": string,"created_at": string,"created_by": string | null,"currency": string,"ends_on": string,"id": string,"notice_deadline": string | null,"party_snapshot": Json | null,"predecessor_contract_id": string | null,"renewal_terms": string | null,"sponsor_id": string,"starts_on": string,"status": string,"terminated_at": string | null,"terminated_on": string | null,"termination_reason": string | null,"terms": string | null,"title": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "confirmed_at"?: string | null,"confirmed_by"?: string | null,"contract_number": string,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"ends_on": string,"id"?: string,"notice_deadline"?: string | null,"party_snapshot"?: Json | null,"predecessor_contract_id"?: string | null,"renewal_terms"?: string | null,"sponsor_id": string,"starts_on": string,"status"?: string,"terminated_at"?: string | null,"terminated_on"?: string | null,"termination_reason"?: string | null,"terms"?: string | null,"title": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "confirmed_at"?: string | null,"confirmed_by"?: string | null,"contract_number"?: string,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"ends_on"?: string,"id"?: string,"notice_deadline"?: string | null,"party_snapshot"?: Json | null,"predecessor_contract_id"?: string | null,"renewal_terms"?: string | null,"sponsor_id"?: string,"starts_on"?: string,"status"?: string,"terminated_at"?: string | null,"terminated_on"?: string | null,"termination_reason"?: string | null,"terms"?: string | null,"title"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "contracts_predecessor_contract_id_sponsor_id_fkey"
+      columns: ["predecessor_contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_invoicing"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "contracts_predecessor_contract_id_sponsor_id_fkey"
+      columns: ["predecessor_contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_totals"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "contracts_predecessor_contract_id_sponsor_id_fkey"
+      columns: ["predecessor_contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contracts"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "contracts_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"credit_allocations": {
+                  Row: {
+                    "amount": number,"created_at": string,"created_by": string | null,"credit_invoice_id": string,"id": string,"reversed_at": string | null,"reversed_by": string | null,"sponsor_id": string,"target_invoice_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"created_at"?: string,"created_by"?: string | null,"credit_invoice_id": string,"id"?: string,"reversed_at"?: string | null,"reversed_by"?: string | null,"sponsor_id": string,"target_invoice_id": string
+                  }
+                  Update: {
+                    "amount"?: number,"created_at"?: string,"created_by"?: string | null,"credit_invoice_id"?: string,"id"?: string,"reversed_at"?: string | null,"reversed_by"?: string | null,"sponsor_id"?: string,"target_invoice_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "credit_allocations_credit_invoice_id_sponsor_id_fkey"
+      columns: ["credit_invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoice_balances"
+      referencedColumns: ["invoice_id","sponsor_id"]
+    },{
+      foreignKeyName: "credit_allocations_credit_invoice_id_sponsor_id_fkey"
+      columns: ["credit_invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "credit_allocations_target_invoice_id_sponsor_id_fkey"
+      columns: ["target_invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoice_balances"
+      referencedColumns: ["invoice_id","sponsor_id"]
+    },{
+      foreignKeyName: "credit_allocations_target_invoice_id_sponsor_id_fkey"
+      columns: ["target_invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["id","sponsor_id"]
+    }
+                  ]
+                },"documents": {
+                  Row: {
+                    "board_shared": boolean,"category": string,"checksum": string | null,"created_at": string,"id": string,"mime_type": string | null,"object_path": string,"size_bytes": number | null,"sponsor_id": string,"sponsor_shared": boolean,"title": string,"upload_status": string,"uploaded_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "board_shared"?: boolean,"category"?: string,"checksum"?: string | null,"created_at"?: string,"id"?: string,"mime_type"?: string | null,"object_path": string,"size_bytes"?: number | null,"sponsor_id": string,"sponsor_shared"?: boolean,"title": string,"upload_status"?: string,"uploaded_by"?: string | null
+                  }
+                  Update: {
+                    "board_shared"?: boolean,"category"?: string,"checksum"?: string | null,"created_at"?: string,"id"?: string,"mime_type"?: string | null,"object_path"?: string,"size_bytes"?: number | null,"sponsor_id"?: string,"sponsor_shared"?: boolean,"title"?: string,"upload_status"?: string,"uploaded_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -36,6 +282,264 @@ export type Database = {
 isOneToOne: false
       referencedRelation: "sponsors"
       referencedColumns: ["id"]
+    }
+                  ]
+                },"fulfillment_evidence": {
+                  Row: {
+                    "created_at": string,"document_id": string,"right_fulfillment_id": string,"sponsor_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"document_id": string,"right_fulfillment_id": string,"sponsor_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"document_id"?: string,"right_fulfillment_id"?: string,"sponsor_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fulfillment_evidence_document_id_sponsor_id_fkey"
+      columns: ["document_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "documents"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "fulfillment_evidence_right_fulfillment_id_sponsor_id_fkey"
+      columns: ["right_fulfillment_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "right_fulfillments"
+      referencedColumns: ["id","sponsor_id"]
+    }
+                  ]
+                },"invoice_documents": {
+                  Row: {
+                    "created_at": string,"document_id": string,"invoice_id": string,"sponsor_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"document_id": string,"invoice_id": string,"sponsor_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"document_id"?: string,"invoice_id"?: string,"sponsor_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invoice_documents_document_id_sponsor_id_fkey"
+      columns: ["document_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "documents"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "invoice_documents_invoice_id_sponsor_id_fkey"
+      columns: ["invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoice_balances"
+      referencedColumns: ["invoice_id","sponsor_id"]
+    },{
+      foreignKeyName: "invoice_documents_invoice_id_sponsor_id_fkey"
+      columns: ["invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["id","sponsor_id"]
+    }
+                  ]
+                },"invoice_lines": {
+                  Row: {
+                    "contract_line_id": string | null,"created_at": string,"description": string,"id": string,"invoice_id": string,"line_total": number | null,"position": number,"quantity": number,"sponsor_id": string,"unit_price": number,"vat_amount": number | null,"vat_rate": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "contract_line_id"?: string | null,"created_at"?: string,"description": string,"id"?: string,"invoice_id": string,"line_total"?: never,"position"?: number,"quantity": number,"sponsor_id": string,"unit_price": number,"vat_amount"?: never,"vat_rate"?: number
+                  }
+                  Update: {
+                    "contract_line_id"?: string | null,"created_at"?: string,"description"?: string,"id"?: string,"invoice_id"?: string,"line_total"?: never,"position"?: number,"quantity"?: number,"sponsor_id"?: string,"unit_price"?: number,"vat_amount"?: never,"vat_rate"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invoice_lines_contract_line_id_sponsor_id_fkey"
+      columns: ["contract_line_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_lines"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "invoice_lines_invoice_id_sponsor_id_fkey"
+      columns: ["invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoice_balances"
+      referencedColumns: ["invoice_id","sponsor_id"]
+    },{
+      foreignKeyName: "invoice_lines_invoice_id_sponsor_id_fkey"
+      columns: ["invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["id","sponsor_id"]
+    }
+                  ]
+                },"invoices": {
+                  Row: {
+                    "billing_snapshot": Json | null,"contract_id": string | null,"created_at": string,"created_by": string | null,"currency": string,"due_on": string | null,"id": string,"invoice_number": string | null,"issue_date": string | null,"issued_at": string | null,"issued_by": string | null,"kind": string,"original_invoice_id": string | null,"prices_include_vat": boolean,"reference": string | null,"sponsor_id": string,"status": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "billing_snapshot"?: Json | null,"contract_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"due_on"?: string | null,"id"?: string,"invoice_number"?: string | null,"issue_date"?: string | null,"issued_at"?: string | null,"issued_by"?: string | null,"kind"?: string,"original_invoice_id"?: string | null,"prices_include_vat"?: boolean,"reference"?: string | null,"sponsor_id": string,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "billing_snapshot"?: Json | null,"contract_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"due_on"?: string | null,"id"?: string,"invoice_number"?: string | null,"issue_date"?: string | null,"issued_at"?: string | null,"issued_by"?: string | null,"kind"?: string,"original_invoice_id"?: string | null,"prices_include_vat"?: boolean,"reference"?: string | null,"sponsor_id"?: string,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invoices_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_invoicing"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "invoices_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_totals"
+      referencedColumns: ["contract_id","sponsor_id"]
+    },{
+      foreignKeyName: "invoices_contract_id_sponsor_id_fkey"
+      columns: ["contract_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contracts"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "invoices_original_invoice_id_sponsor_id_fkey"
+      columns: ["original_invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoice_balances"
+      referencedColumns: ["invoice_id","sponsor_id"]
+    },{
+      foreignKeyName: "invoices_original_invoice_id_sponsor_id_fkey"
+      columns: ["original_invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "invoices_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"package_right_templates": {
+                  Row: {
+                    "description": string,"id": string,"package_version_id": string,"position": number,"quantity": number,"timing": string | null,"unit": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "description": string,"id"?: string,"package_version_id": string,"position"?: number,"quantity": number,"timing"?: string | null,"unit": string
+                  }
+                  Update: {
+                    "description"?: string,"id"?: string,"package_version_id"?: string,"position"?: number,"quantity"?: number,"timing"?: string | null,"unit"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "package_right_templates_package_version_id_fkey"
+      columns: ["package_version_id"]
+isOneToOne: false
+      referencedRelation: "package_versions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"package_versions": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"currency": string,"description": string | null,"id": string,"list_price": number | null,"package_id": string,"published_at": string | null,"published_by": string | null,"status": string,"updated_at": string,"vat_rate": number | null,"version_number": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"currency"?: string,"description"?: string | null,"id"?: string,"list_price"?: number | null,"package_id": string,"published_at"?: string | null,"published_by"?: string | null,"status"?: string,"updated_at"?: string,"vat_rate"?: number | null,"version_number": number
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"currency"?: string,"description"?: string | null,"id"?: string,"list_price"?: number | null,"package_id"?: string,"published_at"?: string | null,"published_by"?: string | null,"status"?: string,"updated_at"?: string,"vat_rate"?: number | null,"version_number"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "package_versions_package_id_fkey"
+      columns: ["package_id"]
+isOneToOne: false
+      referencedRelation: "sponsorship_packages"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"payment_allocations": {
+                  Row: {
+                    "amount": number,"created_at": string,"created_by": string | null,"id": string,"invoice_id": string,"payment_id": string,"reversed_at": string | null,"reversed_by": string | null,"sponsor_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"created_at"?: string,"created_by"?: string | null,"id"?: string,"invoice_id": string,"payment_id": string,"reversed_at"?: string | null,"reversed_by"?: string | null,"sponsor_id": string
+                  }
+                  Update: {
+                    "amount"?: number,"created_at"?: string,"created_by"?: string | null,"id"?: string,"invoice_id"?: string,"payment_id"?: string,"reversed_at"?: string | null,"reversed_by"?: string | null,"sponsor_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payment_allocations_invoice_id_sponsor_id_fkey"
+      columns: ["invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoice_balances"
+      referencedColumns: ["invoice_id","sponsor_id"]
+    },{
+      foreignKeyName: "payment_allocations_invoice_id_sponsor_id_fkey"
+      columns: ["invoice_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["id","sponsor_id"]
+    },{
+      foreignKeyName: "payment_allocations_payment_id_sponsor_id_fkey"
+      columns: ["payment_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "payment_balances"
+      referencedColumns: ["payment_id","sponsor_id"]
+    },{
+      foreignKeyName: "payment_allocations_payment_id_sponsor_id_fkey"
+      columns: ["payment_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "payments"
+      referencedColumns: ["id","sponsor_id"]
+    }
+                  ]
+                },"payments": {
+                  Row: {
+                    "amount": number,"created_at": string,"currency": string,"direction": string,"id": string,"method": string,"received_on": string,"reference": string | null,"registered_by": string | null,"reversal_reason": string | null,"reversed_at": string | null,"reversed_by": string | null,"sponsor_id": string,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"created_at"?: string,"currency"?: string,"direction"?: string,"id"?: string,"method": string,"received_on": string,"reference"?: string | null,"registered_by"?: string | null,"reversal_reason"?: string | null,"reversed_at"?: string | null,"reversed_by"?: string | null,"sponsor_id": string,"status"?: string
+                  }
+                  Update: {
+                    "amount"?: number,"created_at"?: string,"currency"?: string,"direction"?: string,"id"?: string,"method"?: string,"received_on"?: string,"reference"?: string | null,"registered_by"?: string | null,"reversal_reason"?: string | null,"reversed_at"?: string | null,"reversed_by"?: string | null,"sponsor_id"?: string,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payments_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"right_fulfillments": {
+                  Row: {
+                    "contract_right_id": string,"description": string,"fulfilled_on": string,"id": string,"portal_visible": boolean,"quantity": number,"registered_at": string,"registered_by": string | null,"sponsor_id": string,"verified_at": string | null,"verified_by": string | null,"void_reason": string | null,"voided_at": string | null,"voided_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "contract_right_id": string,"description": string,"fulfilled_on": string,"id"?: string,"portal_visible"?: boolean,"quantity": number,"registered_at"?: string,"registered_by"?: string | null,"sponsor_id": string,"verified_at"?: string | null,"verified_by"?: string | null,"void_reason"?: string | null,"voided_at"?: string | null,"voided_by"?: string | null
+                  }
+                  Update: {
+                    "contract_right_id"?: string,"description"?: string,"fulfilled_on"?: string,"id"?: string,"portal_visible"?: boolean,"quantity"?: number,"registered_at"?: string,"registered_by"?: string | null,"sponsor_id"?: string,"verified_at"?: string | null,"verified_by"?: string | null,"void_reason"?: string | null,"voided_at"?: string | null,"voided_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "right_fulfillments_contract_right_id_sponsor_id_fkey"
+      columns: ["contract_right_id","sponsor_id"]
+isOneToOne: false
+      referencedRelation: "contract_rights"
+      referencedColumns: ["id","sponsor_id"]
     }
                   ]
                 },"sponsor_contacts": {
@@ -60,20 +564,60 @@ isOneToOne: false
                   ]
                 },"sponsor_internal": {
                   Row: {
-                    "email": string | null,"kvk": string | null,"notes": string | null,"owner_id": string | null,"phone": string | null,"postal_code": string | null,"sponsor_id": string,"status": string,"street": string | null,"updated_at": string,"vat_number": string | null
+                    "email": string | null,"is_paying": boolean,"kvk": string | null,"notes": string | null,"owner_id": string | null,"phone": string | null,"postal_code": string | null,"sponsor_id": string,"status": string,"street": string | null,"updated_at": string,"vat_number": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "email"?: string | null,"kvk"?: string | null,"notes"?: string | null,"owner_id"?: string | null,"phone"?: string | null,"postal_code"?: string | null,"sponsor_id": string,"status"?: string,"street"?: string | null,"updated_at"?: string,"vat_number"?: string | null
+                    "email"?: string | null,"is_paying"?: boolean,"kvk"?: string | null,"notes"?: string | null,"owner_id"?: string | null,"phone"?: string | null,"postal_code"?: string | null,"sponsor_id": string,"status"?: string,"street"?: string | null,"updated_at"?: string,"vat_number"?: string | null
                   }
                   Update: {
-                    "email"?: string | null,"kvk"?: string | null,"notes"?: string | null,"owner_id"?: string | null,"phone"?: string | null,"postal_code"?: string | null,"sponsor_id"?: string,"status"?: string,"street"?: string | null,"updated_at"?: string,"vat_number"?: string | null
+                    "email"?: string | null,"is_paying"?: boolean,"kvk"?: string | null,"notes"?: string | null,"owner_id"?: string | null,"phone"?: string | null,"postal_code"?: string | null,"sponsor_id"?: string,"status"?: string,"street"?: string | null,"updated_at"?: string,"vat_number"?: string | null
                   }
                   Relationships: [
                     {
       foreignKeyName: "sponsor_internal_sponsor_id_fkey"
       columns: ["sponsor_id"]
 isOneToOne: true
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sponsor_invitations": {
+                  Row: {
+                    "accepted_at": string | null,"accepted_user_id": string | null,"created_at": string,"email": string,"expires_at": string,"id": string,"invited_by": string,"sponsor_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "accepted_at"?: string | null,"accepted_user_id"?: string | null,"created_at"?: string,"email": string,"expires_at"?: string,"id"?: string,"invited_by"?: string,"sponsor_id": string
+                  }
+                  Update: {
+                    "accepted_at"?: string | null,"accepted_user_id"?: string | null,"created_at"?: string,"email"?: string,"expires_at"?: string,"id"?: string,"invited_by"?: string,"sponsor_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sponsor_invitations_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sponsor_requests": {
+                  Row: {
+                    "answer": string | null,"created_at": string,"id": string,"kind": string,"message": string | null,"previous": Json | null,"proposed": NonNullable<Json>,"requested_by": string,"reviewed_at": string | null,"reviewed_by": string | null,"sponsor_id": string,"status": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "answer"?: string | null,"created_at"?: string,"id"?: string,"kind"?: string,"message"?: string | null,"previous"?: Json | null,"proposed": NonNullable<Json>,"requested_by"?: string,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"sponsor_id": string,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "answer"?: string | null,"created_at"?: string,"id"?: string,"kind"?: string,"message"?: string | null,"previous"?: Json | null,"proposed"?: NonNullable<Json>,"requested_by"?: string,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"sponsor_id"?: string,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sponsor_requests_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
       referencedRelation: "sponsors"
       referencedColumns: ["id"]
     }
@@ -88,6 +632,20 @@ isOneToOne: true
                   }
                   Update: {
                     "archived_at"?: string | null,"city"?: string | null,"created_at"?: string,"id"?: string,"name"?: string,"trading_name"?: string | null,"updated_at"?: string,"website"?: string | null
+                  }
+                  Relationships: [
+
+                  ]
+                },"sponsorship_packages": {
+                  Row: {
+                    "archived_at": string | null,"created_at": string,"created_by": string | null,"description": string | null,"id": string,"name": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"id"?: string,"name": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"id"?: string,"name"?: string,"updated_at"?: string
                   }
                   Relationships: [
 
@@ -109,25 +667,191 @@ isOneToOne: true
                 }
           }
           Views: {
-            [_ in never]: never
+            "contract_invoicing": {
+                  Row: {
+                    "contract_id": string,"contract_value": number | null,"invoiced_net": number | null,"sponsor_id": string,"to_invoice": number | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "contracts_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"contract_totals": {
+                  Row: {
+                    "baseline_total": number | null,"contract_id": string,"current_total": number | null,"line_count": number | null,"sponsor_id": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "contracts_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"invoice_balances": {
+                  Row: {
+                    "credit_applied": number | null,"credited": number | null,"due_on": string | null,"invoice_id": string,"invoice_number": string | null,"issue_date": string | null,"kind": string,"open_amount": number | null,"paid": number | null,"sponsor_id": string,"status": string,"total": number | null,"total_excl_vat": number | null,"vat_total": number | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "invoices_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"payment_balances": {
+                  Row: {
+                    "allocated": number | null,"amount": number,"direction": string,"payment_id": string,"received_on": string,"sponsor_id": string,"status": string,"unallocated": number | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "payments_sponsor_id_fkey"
+      columns: ["sponsor_id"]
+isOneToOne: false
+      referencedRelation: "sponsors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
           }
           Functions: {
-            "crm_owners":
+            "add_contract_amendment":
+{ Args: { "details": Json,"target": string }; Returns: string
+                           },
+"add_contract_line":
+{ Args: { "contract": string,"details": Json }; Returns: string
+                           },
+"add_contract_right":
+{ Args: { "contract": string,"details": Json }; Returns: string
+                           },
+"add_invoice_line":
+{ Args: { "details": Json,"invoice": string }; Returns: string
+                           },
+"allocate_credit":
+{ Args: { "amount": number,"credit": string,"target": string }; Returns: string
+                           },
+"allocate_payment":
+{ Args: { "amount": number,"invoice": string,"payment": string }; Returns: string
+                           },
+"confirm_contract":
+{ Args: { "target": string }; Returns: undefined
+                           },
+"create_contract":
+{ Args: { "company": string,"details": Json }; Returns: string
+                           },
+"create_credit_note":
+{ Args: { "details": Json,"original": string }; Returns: string
+                           },
+"create_invoice":
+{ Args: { "company": string,"details": Json }; Returns: string
+                           },
+"crm_owners":
 { Args: Record<PropertyKey, never>; Returns: {
               "label": string,"user_id": string
             }[]
                            },
+"delete_invoice_draft":
+{ Args: { "target": string }; Returns: undefined
+                           },
+"finalize_document":
+{ Args: { "target": string }; Returns: undefined
+                           },
 "get_access_context":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"issue_invoice":
+{ Args: { "details": Json,"target": string }; Returns: string
+                           },
+"log_report_export":
+{ Args: { "season": number }; Returns: undefined
+                           },
 "manage_sponsor_member":
 { Args: { "active": boolean,"company": string,"contact": string,"target": string }; Returns: undefined
+                           },
+"portal_accept_invitation":
+{ Args: { "invitation": string,"target": string }; Returns: undefined
+                           },
+"portal_company":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"portal_create_invitation":
+{ Args: { "invitee": string }; Returns: string
+                           },
+"portal_members":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "email": string,"is_active": boolean,"is_self": boolean,"user_id": string
+            }[]
+                           },
+"portal_revoke_member":
+{ Args: { "target": string }; Returns: undefined
+                           },
+"publish_package_version":
+{ Args: { "target": string }; Returns: undefined
+                           },
+"register_document":
+{ Args: { "company": string,"details": Json,"link": Json }; Returns: string
+                           },
+"register_fulfillment":
+{ Args: { "details": Json,"target": string }; Returns: string
+                           },
+"register_payment":
+{ Args: { "company": string,"details": Json }; Returns: string
+                           },
+"remove_contract_line":
+{ Args: { "target": string }; Returns: undefined
+                           },
+"remove_contract_right":
+{ Args: { "target": string }; Returns: undefined
+                           },
+"remove_invoice_line":
+{ Args: { "target": string }; Returns: undefined
+                           },
+"renew_contract":
+{ Args: { "details": Json,"target": string }; Returns: string
+                           },
+"report_dashboard":
+{ Args: { "detailed"?: boolean,"season"?: number }; Returns: Json
+                           },
+"retire_package_version":
+{ Args: { "target": string }; Returns: undefined
+                           },
+"reverse_allocation":
+{ Args: { "kind": string,"target": string }; Returns: undefined
+                           },
+"reverse_payment":
+{ Args: { "reason": string,"target": string }; Returns: undefined
+                           },
+"review_fulfillment":
+{ Args: { "action": string,"reason"?: string,"target": string }; Returns: undefined
+                           },
+"review_request":
+{ Args: { "approve": boolean,"reply"?: string,"target": string }; Returns: undefined
+                           },
+"save_package":
+{ Args: { "details": Json,"target": string }; Returns: string
+                           },
+"save_package_version":
+{ Args: { "details": Json,"package": string,"target": string }; Returns: string
                            },
 "save_sponsor":
 { Args: { "details": Json,"target": string }; Returns: string
                            },
 "save_sponsor_contact":
 { Args: { "company": string,"details": Json,"target": string }; Returns: string
+                           },
+"set_package_archived":
+{ Args: { "archive": boolean,"target": string }; Returns: undefined
                            },
 "set_user_access":
 { Args: { "active": boolean,"company"?: string,"new_role": string,"target": string }; Returns: undefined
@@ -136,6 +860,24 @@ isOneToOne: true
 { Args: { "company": string }; Returns: {
               "is_active": boolean,"label": string,"user_id": string
             }[]
+                           },
+"submit_profile_request":
+{ Args: { "details": Json,"message"?: string }; Returns: string
+                           },
+"terminate_contract":
+{ Args: { "details": Json,"target": string }; Returns: undefined
+                           },
+"update_contract_draft":
+{ Args: { "details": Json,"target": string }; Returns: undefined
+                           },
+"update_contract_right":
+{ Args: { "details": Json,"target": string }; Returns: undefined
+                           },
+"update_invoice_draft":
+{ Args: { "details": Json,"target": string }; Returns: undefined
+                           },
+"withdraw_request":
+{ Args: { "target": string }; Returns: undefined
                            }
           }
           Enums: {

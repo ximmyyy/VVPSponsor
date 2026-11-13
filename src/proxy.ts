@@ -3,8 +3,8 @@ import { createServerClient } from "@supabase/ssr";
 import { getPublicEnv } from "@/lib/env/public";
 import { isLocalDesignPreview } from "@/lib/design-preview";
 
-// Tijdelijke ontwerpgrens, geen gebruikersautorisatie. Fase 3 vervangt dit patroon
-// pas wanneer echte sessie-, rol- en databasecontroles zijn geïmplementeerd.
+// Ontwerproutes alleen lokaal; overige routes krijgen sessieverversing en private headers.
+// Autorisatie gebeurt per pagina (getUser + DB-rechten) en in de database (RLS).
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   if (
@@ -40,7 +40,9 @@ export async function proxy(request: NextRequest) {
         },
       },
     );
-    await client.auth.getUser();
+    // Ververst de sessie; met asymmetrische sleutels lokaal geverifieerd (gecachte JWKS),
+    // dus zonder Auth-serverronde. Pagina's controleren daarna zelf getUser() + DB-rechten.
+    await client.auth.getClaims();
     return response;
   }
   if (isLocalDesignPreview(process.env, request.headers.get("host")))
